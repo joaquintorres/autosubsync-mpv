@@ -16,6 +16,7 @@ subsync = "/home/user/.local/bin/ffsubsync" -- use 'which ffsubsync' to find the
 Note that **the subtitle file will be overwritten**, so beware.
 
 ### Possible improvements
+* Actually check if the `srt` file exists before feeding it to `ffsubsync`. Pressing `n` without the proper file will cause `ffsubsync` to extract the whole raw audio before actually raising the corresponding error flag, and that's just incredibly slow for such basic error handling.
 * Test if it works properly in Windows or MacOS.
 * Modify it to support multiple filenames/languages. Since `autosub` and `trueautosub` only use one language at a time and the same subtitle name as the video file, this hasn't been too much of a bother yet.
-* Actually check if the `srt` file exists before feeding it to `ffsubsync`.
+
