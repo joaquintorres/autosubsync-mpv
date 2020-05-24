@@ -18,6 +18,7 @@ function sync_sub_fn()
   path = mp.get_property("path")
   srt_path = string.gsub(path, "%.%w+$", ".srt")
   if file_exists(srt_path)==false then
+    mp.msg.warn("Couldn't find",srt_path)
     display_error()
     do return end
   end 
@@ -26,10 +27,11 @@ function sync_sub_fn()
   t.args = {subsync, path, "-i",srt_path,"-o",srt_path}
 
   mp.osd_message("Sync subtitle...")
+  mp.msg.info("Starting ffsubsync...")
   res = utils.subprocess(t)
   if res.error == nil then
     if mp.commandv("sub_add", srt_path) then
-      mp.msg.warn("Subtitle updated")
+      mp.msg.info("Subtitle updated")
       mp.osd_message("Subtitle at'" .. srt_path .. "' synchronized")
     else
       display_error()
