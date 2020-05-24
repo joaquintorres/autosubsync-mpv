@@ -18,3 +18,4 @@ Note that **the subtitle file will be overwritten**, so beware.
 ### Possible improvements
 * Test if it works properly in Windows or MacOS.
 * Modify it to support multiple filenames/languages. Since `autosub` and `trueautosub` only use one language at a time and the same subtitle name as the video file, this hasn't been too much of a bother yet.
+* Actually check if the `srt` file exists before feeding it to `ffsubsync`.
