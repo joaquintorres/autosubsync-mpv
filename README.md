@@ -4,9 +4,9 @@ Automatic subtitle synchronization script for mpv media player, using [ffsubsync
 ### Usage
 1. Install [ffsubsync](https://github.com/smacke/ffsubsync). You can simply use `pip install ffsubsync`, assuming you already have `ffmpeg` installed.
 2. Download `autosubsync.lua` or clone the repo.
-3. Edit the following line replacing your `ffsubsync` path inside the quotes. In Linux you can use `which ffsubsync` to find out where it is.
+3. If your `ffsubsync` path isn't the default, edit the following line replacing `default_subsync_location` with your `ffsubsync` path bewteen quotes. In Linux you can use `which ffsubsync` to find out where it is.
 ~~~
-subsync = "/home/user/.local/bin/ffsubsync" -- use 'which ffsubsync' to find the path
+subsync = default_subsync_location --or subsync = "yourpath/ffsubsync"
 ~~~
 4. Move `autosubsync.lua` to your scripts folder. This is typically in `~/.config/mpv/scripts` (Linux) or `%AppData%\mpv\scripts\` (Windows).
 5. When you have an out of sync sub, press `n` to synchronize it. The subtitle should be a `.srt` file with the same name as your video file, and in the same folder. 
