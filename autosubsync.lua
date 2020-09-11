@@ -3,6 +3,31 @@
 -- keyname script_binding auto_sync_subs
 local utils = require 'mp.utils'
 
+-- Snippet borrowed from stackoverflow to get the operating system
+-- originally found at: https://stackoverflow.com/a/30960054
+local binary_format = package.cpath:match("%p[\\|/]?%p(%a+)")
+if binary_format == "dll" then
+  function os.name()
+    return "Windows"
+  end
+elseif binary_format == "so" then
+  function os.name()
+    return "Linux"
+  end
+elseif binary_format == "dylib" then
+  function os.name()
+    return "macOS"
+  end
+end
+binary_format = nil
+
+-- Chooses the default location of the ffsubsync executable depending on the operating system
+if os.name() == "Linux" or os.name() == "macOS" then
+    default_subsync_location = utils.join_path(os.getenv("HOME"), ".local/bin/ffsubsync") 
+elseif os.name() == "Windows" then 
+    default_subsync_location = "%APPDATA%/Python/Scripts/ffsubsync"
+end
+
 function display_error()
   mp.msg.warn("Subtitle synchronization failed: ")
   mp.osd_message("Subtitle synchronization failed")
@@ -22,7 +47,10 @@ function sync_sub_fn()
     display_error()
     do return end
   end 
-  subsync = "/home/user/.local/bin/ffsubsync" -- use 'which ffsubsync' to find the path
+
+  -- Replace the following line if the location of ffsubsync differs from the defaults
+  -- You may use 'which ffsubsync' to find the path
+  subsync = default_subsync_location
   t = {}
   t.args = {subsync, path, "-i",srt_path,"-o",srt_path}
 
@@ -42,3 +70,4 @@ function sync_sub_fn()
 end
 
 mp.add_key_binding("n", "auto_sync_subs", sync_sub_fn)
+
