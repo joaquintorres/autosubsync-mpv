@@ -2,7 +2,14 @@
 -- add the following to your input.conf to change the default keybinding:
 -- keyname script_binding auto_sync_subs
 local utils = require 'mp.utils'
-local default_subsync_location
+local mpopt = require('mp.options')
+
+-- Options can be changed here or in a separate config file.
+-- Config path: ~/.config/mpv/script-opts/autosubsync.conf
+local config = {
+    subsync_path = ""  -- Replace the following line if the location of ffsubsync differs from the defaults
+}
+mpopt.read_options(config, 'autosubsync')
 
 -- Snippet borrowed from stackoverflow to get the operating system
 -- originally found at: https://stackoverflow.com/a/30960054
