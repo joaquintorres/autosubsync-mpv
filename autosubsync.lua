@@ -2,6 +2,7 @@
 -- add the following to your input.conf to change the default keybinding:
 -- keyname script_binding auto_sync_subs
 local utils = require 'mp.utils'
+local default_subsync_location
 
 -- Snippet borrowed from stackoverflow to get the operating system
 -- originally found at: https://stackoverflow.com/a/30960054
@@ -23,10 +24,10 @@ os.name = (function()
 end)()
 
 -- Chooses the default location of the ffsubsync executable depending on the operating system
-if os.name() == "Linux" or os.name() == "macOS" then
-    default_subsync_location = utils.join_path(os.getenv("HOME"), ".local/bin/ffsubsync")
-elseif os.name() == "Windows" then
+if os.name() == "Windows" then
     default_subsync_location = "%APPDATA%/Python/Scripts/ffsubsync"
+else
+    default_subsync_location = utils.join_path(os.getenv("HOME"), ".local/bin/ffsubsync")
 end
 
 function display_error()
