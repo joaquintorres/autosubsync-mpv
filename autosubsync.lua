@@ -30,13 +30,13 @@ else
     default_subsync_location = utils.join_path(os.getenv("HOME"), ".local/bin/ffsubsync")
 end
 
-function display_error()
+local function display_error()
     mp.msg.warn("Subtitle synchronization failed: ")
     mp.osd_message("Subtitle synchronization failed")
 end
 
 -- Courtesy of https://stackoverflow.com/questions/4990990/check-if-a-file-exists-with-lua
-function file_exists(filepath)
+local function file_exists(filepath)
     local f = io.open(filepath, "r")
     if f ~= nil then
         io.close(f)
@@ -46,7 +46,7 @@ function file_exists(filepath)
     end
 end
 
-function sync_sub_fn()
+local function sync_sub_fn()
     path = mp.get_property("path")
     srt_path = string.gsub(path, "%.%w+$", ".srt")
     if file_exists(srt_path) == false then
