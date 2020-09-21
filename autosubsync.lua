@@ -5,21 +5,22 @@ local utils = require 'mp.utils'
 
 -- Snippet borrowed from stackoverflow to get the operating system
 -- originally found at: https://stackoverflow.com/a/30960054
-local binary_format = package.cpath:match("%p[\\|/]?%p(%a+)")
-if binary_format == "dll" then
-    function os.name()
-        return "Windows"
+os.name = (function()
+    local binary_format = package.cpath:match("%p[\\|/]?%p(%a+)")
+    if binary_format == "dll" then
+        return function()
+            return "Windows"
+        end
+    elseif binary_format == "so" then
+        return function()
+            return "Linux"
+        end
+    elseif binary_format == "dylib" then
+        return function()
+            return "macOS"
+        end
     end
-elseif binary_format == "so" then
-    function os.name()
-        return "Linux"
-    end
-elseif binary_format == "dylib" then
-    function os.name()
-        return "macOS"
-    end
-end
-binary_format = nil
+end)()
 
 -- Chooses the default location of the ffsubsync executable depending on the operating system
 if os.name() == "Linux" or os.name() == "macOS" then
