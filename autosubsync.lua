@@ -75,7 +75,6 @@ local function get_active_subtitle_track_path()
 
     for i = 1, tracks_count do
         local track_type = mp.get_property(string.format("track-list/%d/type", i))
-        local track_index = mp.get_property_number(string.format("track-list/%d/ff-index", i))
         local track_selected = mp.get_property(string.format("track-list/%d/selected", i))
 
         if track_type == "sub" and track_selected == "yes" then
