@@ -92,25 +92,26 @@ end
 
 local function sync_sub_fn()
     local video_path = mp.get_property("path")
-    local subtitle_path = string.gsub(video_path, "%.%w+$", ".srt")
+    local subtitle_path = get_active_subtitle_track_path()
 
     if file_exists(subtitle_path) == false then
-        notify(table.concat { "Subtitle synchronization failed:\nCouldn't find ", subtitle_path }, "error", 3)
+        notify(table.concat { "Subtitle synchronization failed:\nCouldn't find ", subtitle_path or "subtitle file." }, "error", 3)
         return
     end
 
-    notify("Starting ffsubsync...", nil, 9999)
+    notify("Starting ffsubsync...", nil, 2)
 
-    local ret = subprocess { config.subsync_path, video_path, "-i", subtitle_path, "-o", subtitle_path }
+    local retimed_subtitle_path = remove_extension(subtitle_path) .. '_retimed.srt'
+    local ret = subprocess { config.subsync_path, video_path, "-i", subtitle_path, "-o", retimed_subtitle_path }
 
     if ret.error == nil then
-        if mp.commandv("sub_add", subtitle_path) then
+        if mp.commandv("sub_add", retimed_subtitle_path) then
             notify("Subtitle synchronized.")
         else
-            notify("Error: couldn't add synchronized subtitle.", "error", 2)
+            notify("Error: couldn't add synchronized subtitle.", "error", 3)
         end
     else
-        notify("Subtitle synchronization failed.", "error", 2)
+        notify("Subtitle synchronization failed.", "error", 3)
     end
 end
 
