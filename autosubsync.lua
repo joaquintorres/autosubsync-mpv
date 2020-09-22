@@ -39,11 +39,6 @@ local function get_default_subsync_path()
     end
 end
 
-local function display_error()
-    mp.msg.warn("Subtitle synchronization failed: ")
-    mp.osd_message("Subtitle synchronization failed")
-end
-
 -- Courtesy of https://stackoverflow.com/questions/4990990/check-if-a-file-exists-with-lua
 local function file_exists(filepath)
     local f = io.open(filepath, "r")
@@ -55,34 +50,36 @@ local function file_exists(filepath)
     end
 end
 
+local function notify(message, level, duration)
+    level = level or 'info'
+    duration = duration or 1
+    mp.msg[level](message)
+    mp.osd_message(message, duration)
+end
+
 local function sync_sub_fn()
     local video_path = mp.get_property("path")
     local subtitle_path = string.gsub(video_path, "%.%w+$", ".srt")
 
     if file_exists(subtitle_path) == false then
-        mp.msg.warn("Couldn't find", subtitle_path)
-        display_error()
-        do
-            return
-        end
+        notify(table.concat { "Subtitle synchronization failed:\nCouldn't find ", subtitle_path }, "error", 3)
+        return
     end
 
     local t = {}
     t.args = { config.subsync_path, video_path, "-i", subtitle_path, "-o", subtitle_path }
 
-    mp.osd_message("Sync subtitle...")
-    mp.msg.info("Starting ffsubsync...")
+    notify("Starting ffsubsync...", nil, 9999)
 
     local ret = utils.subprocess(t)
     if ret.error == nil then
         if mp.commandv("sub_add", subtitle_path) then
-            mp.msg.info("Subtitle updated")
-            mp.osd_message("Subtitle at'" .. subtitle_path .. "' synchronized")
+            notify("Subtitle synchronized.")
         else
-            display_error()
+            notify("Error: couldn't add synchronized subtitle.", "error", 2)
         end
     else
-        display_error()
+        notify("Subtitle synchronization failed.", "error", 2)
     end
 end
 
