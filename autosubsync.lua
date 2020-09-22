@@ -56,29 +56,28 @@ local function file_exists(filepath)
 end
 
 local function sync_sub_fn()
-    path = mp.get_property("path")
-    srt_path = string.gsub(path, "%.%w+$", ".srt")
-    if file_exists(srt_path) == false then
-        mp.msg.warn("Couldn't find", srt_path)
+    local video_path = mp.get_property("path")
+    local subtitle_path = string.gsub(video_path, "%.%w+$", ".srt")
+
+    if file_exists(subtitle_path) == false then
+        mp.msg.warn("Couldn't find", subtitle_path)
         display_error()
         do
             return
         end
     end
 
-    -- Replace the following line if the location of ffsubsync differs from the defaults
-    -- You may use 'which ffsubsync' to find the path
-    subsync = default_subsync_location
-    t = {}
-    t.args = { subsync, path, "-i", srt_path, "-o", srt_path }
+    local t = {}
+    t.args = { config.subsync_path, video_path, "-i", subtitle_path, "-o", subtitle_path }
 
     mp.osd_message("Sync subtitle...")
     mp.msg.info("Starting ffsubsync...")
-    res = utils.subprocess(t)
-    if res.error == nil then
-        if mp.commandv("sub_add", srt_path) then
+
+    local ret = utils.subprocess(t)
+    if ret.error == nil then
+        if mp.commandv("sub_add", subtitle_path) then
             mp.msg.info("Subtitle updated")
-            mp.osd_message("Subtitle at'" .. srt_path .. "' synchronized")
+            mp.osd_message("Subtitle at'" .. subtitle_path .. "' synchronized")
         else
             display_error()
         end
