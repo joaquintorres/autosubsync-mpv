@@ -21,7 +21,7 @@ os.name = (function()
         end
     elseif binary_format == "so" then
         return function()
-            return "Linux"
+            return "GNU/Linux"
         end
     elseif binary_format == "dylib" then
         return function()
