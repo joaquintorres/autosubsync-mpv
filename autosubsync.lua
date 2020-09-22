@@ -57,6 +57,15 @@ local function notify(message, level, duration)
     mp.osd_message(message, duration)
 end
 
+local function subprocess(args)
+    return mp.command_native {
+        name = "subprocess",
+        playback_only = false,
+        capture_stdout = true,
+        args = args
+    }
+end
+
 local function sync_sub_fn()
     local video_path = mp.get_property("path")
     local subtitle_path = string.gsub(video_path, "%.%w+$", ".srt")
@@ -66,12 +75,10 @@ local function sync_sub_fn()
         return
     end
 
-    local t = {}
-    t.args = { config.subsync_path, video_path, "-i", subtitle_path, "-o", subtitle_path }
-
     notify("Starting ffsubsync...", nil, 9999)
 
-    local ret = utils.subprocess(t)
+    local ret = subprocess { config.subsync_path, video_path, "-i", subtitle_path, "-o", subtitle_path }
+
     if ret.error == nil then
         if mp.commandv("sub_add", subtitle_path) then
             notify("Subtitle synchronized.")
