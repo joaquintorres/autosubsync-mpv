@@ -86,6 +86,10 @@ local function get_active_subtitle_track_path()
     return sub_track_path
 end
 
+local function remove_extension(filename)
+    return filename:gsub('%.%w+$', '')
+end
+
 local function sync_sub_fn()
     local video_path = mp.get_property("path")
     local subtitle_path = string.gsub(video_path, "%.%w+$", ".srt")
