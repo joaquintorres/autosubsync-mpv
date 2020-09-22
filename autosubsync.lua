@@ -41,6 +41,9 @@ end
 
 -- Courtesy of https://stackoverflow.com/questions/4990990/check-if-a-file-exists-with-lua
 local function file_exists(filepath)
+    if not filepath then
+        return false
+    end
     local f = io.open(filepath, "r")
     if f ~= nil then
         io.close(f)
