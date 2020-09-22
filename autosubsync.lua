@@ -1,7 +1,7 @@
 -- default keybinding: n
 -- add the following to your input.conf to change the default keybinding:
 -- keyname script_binding auto_sync_subs
-local utils = require 'mp.utils'
+local utils = require('mp.utils')
 local mpopt = require('mp.options')
 
 -- Options can be changed here or in a separate config file.
