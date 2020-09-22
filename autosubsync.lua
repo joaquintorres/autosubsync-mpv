@@ -30,6 +30,15 @@ os.name = (function()
     end
 end)()
 
+local function get_default_subsync_path()
+    -- Chooses the default location of the ffsubsync executable depending on the operating system
+    if os.name() == "Windows" then
+        return "%APPDATA%/Python/Scripts/ffsubsync"
+    else
+        return utils.join_path(os.getenv("HOME"), ".local/bin/ffsubsync")
+    end
+end
+
 local function display_error()
     mp.msg.warn("Subtitle synchronization failed: ")
     mp.osd_message("Subtitle synchronization failed")
@@ -78,11 +87,7 @@ local function sync_sub_fn()
     end
 end
 
--- Chooses the default location of the ffsubsync executable depending on the operating system
-if os.name() == "Windows" then
-    default_subsync_location = "%APPDATA%/Python/Scripts/ffsubsync"
-else
-    default_subsync_location = utils.join_path(os.getenv("HOME"), ".local/bin/ffsubsync")
-end
+-- Entry point
 
+config.subsync_path = config.subsync_path == "" or get_default_subsync_path()
 mp.add_key_binding("n", "auto_sync_subs", sync_sub_fn)
