@@ -116,6 +116,7 @@ local function sync_sub_fn()
 end
 
 -- Entry point
-
-config.subsync_path = config.subsync_path == "" or get_default_subsync_path()
+if config.subsync_path == "" then
+    config.subsync_path = get_default_subsync_path()
+end
 mp.add_key_binding("n", "auto_sync_subs", sync_sub_fn)
