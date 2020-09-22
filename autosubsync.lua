@@ -69,6 +69,23 @@ local function subprocess(args)
     }
 end
 
+local function get_active_subtitle_track_path()
+    local sub_track_path
+    local tracks_count = mp.get_property_number("track-list/count")
+
+    for i = 1, tracks_count do
+        local track_type = mp.get_property(string.format("track-list/%d/type", i))
+        local track_index = mp.get_property_number(string.format("track-list/%d/ff-index", i))
+        local track_selected = mp.get_property(string.format("track-list/%d/selected", i))
+
+        if track_type == "sub" and track_selected == "yes" then
+            sub_track_path = mp.get_property(string.format("track-list/%d/external-filename", i))
+            break
+        end
+    end
+    return sub_track_path
+end
+
 local function sync_sub_fn()
     local video_path = mp.get_property("path")
     local subtitle_path = string.gsub(video_path, "%.%w+$", ".srt")
