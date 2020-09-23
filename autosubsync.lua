@@ -5,23 +5,18 @@ local utils = require 'mp.utils'
 
 -- Snippet borrowed from stackoverflow to get the operating system
 -- originally found at: https://stackoverflow.com/a/30960054
-if os.getenv('HOME') == nil then
+local binary_format = package.cpath:match("%p[\\|/]?%p(%a+)")
+if binary_format == "dll" then
   function os.name()
     return "Windows"
   end
-else
-  function os.capture(cmd, raw)
-    local f = assert(io.popen(cmd, 'r'))
-    local s = assert(f:read('*a'))
-    f:close()
-    if raw then return s end
-    s = string.gsub(s, '^%s+', '')
-    s = string.gsub(s, '%s+$', '')
-    s = string.gsub(s, '[\n\r]+', ' ')
-    return s
-  end
+elseif binary_format == "so" then
   function os.name()
-    return os.capture('uname')
+    return "Linux"
+  end
+elseif binary_format == "dylib" then
+  function os.name()
+    return "macOS"
   end
 end
 binary_format = nil
@@ -30,7 +25,7 @@ binary_format = nil
 if os.name() == "Linux" or os.name() == "macOS" then
     default_subsync_location = utils.join_path(os.getenv("HOME"), ".local/bin/ffsubsync") 
 elseif os.name() == "Windows" then 
-    default_subsync_location = utils.join_path(os.getenv("LocalAppData"), "Programs\\Python\\Python38\\scripts\\ffsubsync.exe")
+    default_subsync_location = "%APPDATA%/Python/Scripts/ffsubsync"
 end
 
 function display_error()
