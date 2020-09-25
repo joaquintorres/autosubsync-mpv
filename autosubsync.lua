@@ -14,18 +14,13 @@ mpopt.read_options(config, 'autosubsync')
 -- Snippet borrowed from stackoverflow to get the operating system
 -- originally found at: https://stackoverflow.com/a/30960054
 os.name = (function()
-    local binary_format = package.cpath:match("%p[\\|/]?%p(%a+)")
-    if binary_format == "dll" then
+    if os.getenv("HOME") == nil then
         return function()
             return "Windows"
         end
-    elseif binary_format == "so" then
+    else
         return function()
-            return "GNU/Linux"
-        end
-    elseif binary_format == "dylib" then
-        return function()
-            return "macOS"
+            return "*nix"
         end
     end
 end)()
@@ -33,7 +28,7 @@ end)()
 local function get_default_subsync_path()
     -- Chooses the default location of the ffsubsync executable depending on the operating system
     if os.name() == "Windows" then
-        return "%APPDATA%/Python/Scripts/ffsubsync"
+        return utils.join_path(os.getenv("LocalAppData"), "Programs\\Python\\Python38\\scripts\\ffsubsync.exe")
     else
         return utils.join_path(os.getenv("HOME"), ".local/bin/ffsubsync")
     end

@@ -11,14 +11,19 @@ or similar scripts.
 You can simply use `pip install ffsubsync`,
 assuming you already have `ffmpeg` installed.
 2. Download `autosubsync.lua` or clone the repo.
-
 3. If your `ffsubsync` path isn't the default,
 create a config file at `~/.config/mpv/script-opts/autosubsync.conf`
 and add the correct path. For example:
 ```
 subsync_path=/usr/local/bin/ffsubsync
 ```
-In GNU/Linux you can use `which ffsubsync` to find out where it is.
+* In Windows you need to use forward slashes 
+or double backslashes for your path,
+like `"C:\\Users\\YourPath\\Scripts\\ffsubsync"`
+or `"C:/Users/YourPath/Scripts/ffsubsync"`,
+or else it won't work. 
+
+* In GNU/Linux you can use `which ffsubsync` to find out where it is.
 
 4. Move `autosubsync.lua` to your scripts folder.
 This is typically in `~/.config/mpv/scripts` (GNU/Linux)
@@ -41,10 +46,17 @@ version of the video might not sync properly
 Note that **the subtitle file will be overwritten**, so beware.
 
 ### Possible improvements
-* Test if it works properly in Windows or MacOS,
-or in mpv-based players like [mpv.net](https://github.com/stax76/mpv.net)
+* ~~Actually check if the srt file exists before feeding it to ffsubsync.
+Pressing n without the proper file will cause ffsubsync to extract the
+whole raw audio before actually raising the corresponding error flag,
+and that's just incredibly slow for such basic error handling.~~
+Fixed, added some messages too.
+* Test if it works properly in ~~Windows~~ or MacOS, or in mpv-based
+players like [mpv.net](https://github.com/stax76/mpv.net) 
 or [celluloid](https://celluloid-player.github.io/).
-* Modify it to support multiple filenames/languages.
-Since `autosub` and `trueautosub` only use one language
-at a time and the same subtitle name as the video file,
-this hasn't been too much of a bother yet.
+* Modify it to support multiple filenames/languages. 
+Since `autosub` and `trueautosub` only use one language at a time and 
+the same subtitle name as the video file, this hasn't been too much of a bother yet.
+* Add compatibility with 
+[autoload](https://github.com/mpv-player/mpv/blob/master/TOOLS/lua/autoload.lua) 
+to sync all the files in a playlist.
