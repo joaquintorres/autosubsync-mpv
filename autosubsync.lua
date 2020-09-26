@@ -98,6 +98,11 @@ local function sync_sub_fn()
     local retimed_subtitle_path = remove_extension(subtitle_path) .. '_retimed.srt'
     local ret = subprocess { config.subsync_path, video_path, "-i", subtitle_path, "-o", retimed_subtitle_path }
 
+    if ret == nil then
+        notify("Parsing failed or no args passed.", "fatal", 3)
+        return
+    end
+
     if ret.status == 0 then
         if mp.commandv("sub_add", retimed_subtitle_path) then
             notify("Subtitle synchronized.")
