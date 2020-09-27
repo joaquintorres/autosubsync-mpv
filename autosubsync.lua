@@ -55,15 +55,6 @@ local function notify(message, level, duration)
     mp.osd_message(message, duration)
 end
 
-local function subprocess(args)
-    return mp.command_native {
-        name = "subprocess",
-        playback_only = false,
-        capture_stdout = true,
-        args = args
-    }
-end
-
 local function get_active_subtitle_track_path()
     local sub_track_path
     local tracks_count = mp.get_property_number("track-list/count")
@@ -96,7 +87,9 @@ local function sync_sub_fn()
     notify("Starting ffsubsync...", nil, 2)
 
     local retimed_subtitle_path = remove_extension(subtitle_path) .. '_retimed.srt'
-    local ret = subprocess { config.subsync_path, video_path, "-i", subtitle_path, "-o", retimed_subtitle_path }
+
+    local t = { args = { config.subsync_path, video_path, "-i", subtitle_path, "-o", retimed_subtitle_path } }
+    local ret = utils.subprocess(t)
 
     if ret == nil then
         notify("Parsing failed or no args passed.", "fatal", 3)
