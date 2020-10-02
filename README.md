@@ -52,6 +52,8 @@ try to check if [ffsubsync](https://github.com/smacke/ffsubsync) works properly
 outside of `mpv` first. If `ffsubsync` isn't working, `autosubsync` will likely
 fail.
 ### Possible improvements
+* Add support for other subsync tools besides `ffsubsync`. This shouldn't be too hard,
+and it might help cover some alternatives that are faster or have different edge cases.
 * ~~Actually check if the srt file exists before feeding it to ffsubsync.
 Pressing n without the proper file will cause ffsubsync to extract the
 whole raw audio before actually raising the corresponding error flag,
