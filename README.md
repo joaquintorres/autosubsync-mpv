@@ -6,10 +6,18 @@ and it's meant to work nicely alongside `autosub`,
 [trueautosub](https://github.com/fullmetalsheep/mpv-iina-scripts)
 or similar scripts.
 
+This branch tests experimental support for 
+[alass](https://github.com/kaegi/alass) (and tools with similar 
+syntax). This hasn't been fully tested yet but appears to work in 
+GNU/Linux. The basic idea is to first get it to work properly 
+with one alternative subsync tool, and then incorporate support
+for most.
+
 ### Usage
 1. Install [ffsubsync](https://github.com/smacke/ffsubsync).
 You can simply use `pip install ffsubsync`,
 assuming you already have `ffmpeg` installed.
+Alternatively, install [alass](https://github.com/kaegi/alass).
 2. Download `autosubsync.lua` or clone the repo.
 3. If your `ffsubsync` path isn't the default,
 create a config file at `~/.config/mpv/script-opts/autosubsync.conf`
@@ -25,6 +33,14 @@ or else it won't work.
 
 * In GNU/Linux you can use `which ffsubsync` to find out where it is.
 
+* If you'd like to use `alass`, add this line to your 
+`autosubsync.conf` file:
+```
+subsync_path=/usr/local/bin/alass
+subsync_tool=alass
+```
+where `subsync_path` now contains your `alass` path.
+ 
 4. Move `autosubsync.lua` to your scripts folder.
 This is typically in `~/.config/mpv/scripts` (GNU/Linux)
 or `%AppData%\mpv\scripts\` (Windows).
