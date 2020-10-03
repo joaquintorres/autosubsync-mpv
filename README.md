@@ -6,6 +6,9 @@ and it's meant to work nicely alongside `autosub`,
 [trueautosub](https://github.com/fullmetalsheep/mpv-iina-scripts)
 or similar scripts.
 
+For experimental support of [alass](https://github.com/kaegi/alass) 
+check out this [branch](https://github.com/joaquintorres/autosubsync-mpv/tree/alass).
+
 ### Usage
 1. Install [ffsubsync](https://github.com/smacke/ffsubsync).
 You can simply use `pip install ffsubsync`,
@@ -26,6 +29,9 @@ or else it won't work.
 
 * In GNU/Linux you can use `which ffsubsync` to find out where it is.
 
+* If you're using an older version of `mpv`, it's possible that you
+need to add your `.conf` file to `lua-settings` instead of `script-opts`. 
+
 4. Move `autosubsync.lua` to your scripts folder.
 This is typically in `~/.config/mpv/scripts` (GNU/Linux)
 or `%AppData%\mpv\scripts\` (Windows).
@@ -42,15 +48,18 @@ subs for your specific language are out of sync.
 Take into account that using this script has the
 same limitations as `ffsubsync`, so subtitles that have
 a lot of extra text or are meant for an entirely different 
-version of the video might not sync properly
+version of the video might not sync properly.
 
 Note that the script will create a new subtitle file, in the same folder 
 as the original, with the `_retimed` suffix at the end.
+
 ### Issues
 If you are having trouble getting it to work, feel free to open an issue, but
 try to check if [ffsubsync](https://github.com/smacke/ffsubsync) works properly
-outside of `mpv` first. If `ffsubsync` isn't working, `autosubsync` will likely
-fail.
+outside of `mpv` first. When `ffsubsync` isn't working, `autosubsync` will likely
+fail. If you do open an issue, please try to include `mpv`'s output to the 
+terminal.
+
 ### Possible improvements
 * Add support for other subsync tools besides `ffsubsync`. This shouldn't be too hard,
 and it might help cover some alternatives that are faster or have different edge cases.
