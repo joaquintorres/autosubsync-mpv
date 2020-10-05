@@ -34,8 +34,7 @@ or else it won't work.
 
 * In GNU/Linux you can use `which ffsubsync` to find out where it is.
 
-* If you'd like to use `alass`, add this line to your 
-`autosubsync.conf` file:
+* If you'd like to use `alass`, add these lines to your `autosubsync.conf` file:
 ```
 subsync_path=/usr/local/bin/alass
 subsync_tool=alass
