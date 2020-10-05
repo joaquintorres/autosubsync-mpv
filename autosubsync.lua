@@ -127,6 +127,11 @@ end
 
 -- Entry point
 if config.subsync_path == "" then
-    config.subsync_path = get_default_subsync_path()
+    if config.subsync_tool ~= "ffsubsync" then
+        -- silently guess alass path if it's not set
+        config.subsync_path = file_exists('/usr/bin/alass') and '/usr/bin/alass' or '/usr/local/bin/alass'
+    else
+        config.subsync_path = get_default_subsync_path()
+    end
 end
 mp.add_key_binding("n", "auto_sync_subs", sync_sub_fn)
