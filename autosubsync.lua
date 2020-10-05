@@ -7,7 +7,8 @@ local mpopt = require('mp.options')
 -- Options can be changed here or in a separate config file.
 -- Config path: ~/.config/mpv/script-opts/autosubsync.conf
 local config = {
-    subsync_path = ""  -- Replace the following line if the location of ffsubsync differs from the defaults
+    subsync_path = "",  -- Replace the following line if the location of ffsubsync differs from the defaults
+    subsync_tool = "ffsubsync",
 }
 mpopt.read_options(config, 'autosubsync')
 
@@ -97,10 +98,16 @@ local function sync_sub_fn()
         return
     end
 
-    notify("Starting ffsubsync...", nil, 2)
-
     local retimed_subtitle_path = table.concat { remove_extension(subtitle_path), '_retimed', get_extension(subtitle_path) }
-    local ret = subprocess { config.subsync_path, video_path, "-i", subtitle_path, "-o", retimed_subtitle_path }
+
+    local ret
+    if config.subsync_tool ~= "ffsubsync" then
+        notify("Starting alass...", nil, 2)
+        ret = subprocess { config.subsync_path, video_path, subtitle_path, retimed_subtitle_path }
+    else
+        notify("Starting ffsubsync...", nil, 2)
+        ret = subprocess { config.subsync_path, video_path, "-i", subtitle_path, "-o", retimed_subtitle_path }
+    end
 
     if ret == nil then
         notify("Parsing failed or no args passed.", "fatal", 3)

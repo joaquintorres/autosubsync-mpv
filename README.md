@@ -6,10 +6,18 @@ and it's meant to work nicely alongside `autosub`,
 [trueautosub](https://github.com/fullmetalsheep/mpv-iina-scripts)
 or similar scripts.
 
+This branch tests experimental support for 
+[alass](https://github.com/kaegi/alass) (and tools with similar 
+syntax). This hasn't been fully tested yet but appears to work in 
+GNU/Linux. The basic idea is to first get it to work properly 
+with one alternative subsync tool, and then incorporate support
+for most.
+
 ### Usage
 1. Install [ffsubsync](https://github.com/smacke/ffsubsync).
 You can simply use `pip install ffsubsync`,
 assuming you already have `ffmpeg` installed.
+Alternatively, install [alass](https://github.com/kaegi/alass).
 2. Download `autosubsync.lua` or clone the repo.
 3. If your `ffsubsync` path isn't the default,
 create a config file at `~/.config/mpv/script-opts/autosubsync.conf` 
@@ -26,6 +34,14 @@ or else it won't work.
 
 * In GNU/Linux you can use `which ffsubsync` to find out where it is.
 
+* If you'd like to use `alass`, add this line to your 
+`autosubsync.conf` file:
+```
+subsync_path=/usr/local/bin/alass
+subsync_tool=alass
+```
+where `subsync_path` now contains your `alass` path.
+ 
 4. Move `autosubsync.lua` to your scripts folder.
 This is typically in `~/.config/mpv/scripts` (GNU/Linux)
 or `%AppData%\mpv\scripts\` (Windows).
@@ -42,15 +58,19 @@ subs for your specific language are out of sync.
 Take into account that using this script has the
 same limitations as `ffsubsync`, so subtitles that have
 a lot of extra text or are meant for an entirely different 
-version of the video might not sync properly
+version of the video might not sync properly. `alass` is supposed
+to handle some edge cases better, but I haven't fully tested it yet,
+obtaining similar results with both.
 
 Note that the script will create a new subtitle file, in the same folder 
 as the original, with the `_retimed` suffix at the end.
+
 ### Issues
 If you are having trouble getting it to work, feel free to open an issue, but
-try to check if [ffsubsync](https://github.com/smacke/ffsubsync) works properly
-outside of `mpv` first. If `ffsubsync` isn't working, `autosubsync` will likely
-fail.
+try to check if [ffsubsync](https://github.com/smacke/ffsubsync)
+(or [alass](https://github.com/kaegi/alass)) works properly outside of `mpv` first.
+If the retiming tool of choice isn't working, `autosubsync` will likely fail.
+
 ### Possible improvements
 * ~~Actually check if the srt file exists before feeding it to ffsubsync.
 Pressing n without the proper file will cause ffsubsync to extract the
