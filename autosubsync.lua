@@ -84,6 +84,10 @@ local function remove_extension(filename)
     return filename:gsub('%.%w+$', '')
 end
 
+local function get_extension(filename)
+    return filename:match("^.+(%.%w+)$")
+end
+
 local function sync_sub_fn()
     local video_path = mp.get_property("path")
     local subtitle_path = get_active_subtitle_track_path()
@@ -95,7 +99,7 @@ local function sync_sub_fn()
 
     notify("Starting ffsubsync...", nil, 2)
 
-    local retimed_subtitle_path = remove_extension(subtitle_path) .. '_retimed.srt'
+    local retimed_subtitle_path = table.concat { remove_extension(subtitle_path), '_retimed', get_extension(subtitle_path) }
     local ret = subprocess { config.subsync_path, video_path, "-i", subtitle_path, "-o", retimed_subtitle_path }
 
     if ret == nil then
