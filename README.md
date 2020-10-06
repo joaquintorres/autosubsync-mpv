@@ -8,7 +8,7 @@ or similar scripts.
 
 For support of [alass](https://github.com/kaegi/alass), other subtitle formats, 
 synchronization using an existing subtitle, and some other things check
-out [this branch](https://github.com/joaquintorres/autosubsync-mpv/tree/alass).
+out [this branch](https://github.com/joaquintorres/autosubsync-mpv/tree/v0.32).
 You should probably use this one if you're using an updated version of `mpv`, 
 since `master` branch is intended to support older, deprecated versions such as 
 the ones in official Debian/Ubuntu repos.
