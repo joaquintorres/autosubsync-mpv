@@ -180,6 +180,9 @@ function Menu:new(o)
     o.rect_height = o.rect_height or 40
     o.active_color = o.active_color or 'ffffff'
     o.inactive_color = o.inactive_color or 'aaaaaa'
+    o.border_color = o.border_color or '000000'
+    o.text_color = o.text_color or 'ffffff'
+
     return setmetatable(o, self)
 end
 
@@ -192,11 +195,25 @@ function Menu:font_size(size)
     self:append(string.format([[{\fs%s}]], size))
 end
 
-function Menu:apply_color(i)
+function Menu:set_text_color(code)
+    self:append(string.format("{\\1c&H%s%s%s&\\1a&H05&}", code:sub(5, 6), code:sub(3, 4), code:sub(1, 2)))
+end
+
+function Menu:set_border_color(code)
+    self:append(string.format("{\\3c&H%s%s%s&}", code:sub(5, 6), code:sub(3, 4), code:sub(1, 2)))
+end
+
+function Menu:apply_text_color()
+    self:set_border_color(self.border_color)
+    self:set_text_color(self.text_color)
+end
+
+function Menu:apply_rect_color(i)
+    self:set_border_color(self.border_color)
     if i == self.selected then
-        self:set_color(self.active_color)
+        self:set_text_color(self.active_color)
     else
-        self:set_color(self.inactive_color)
+        self:set_text_color(self.inactive_color)
     end
 end
 
@@ -207,22 +224,14 @@ function Menu:draw_text(i)
     self:new_event()
     self:pos(self.pos_x + padding, self.pos_y + self.rect_height * (i - 1) + padding)
     self:font_size(font_size)
-    self:apply_color(i)
+    self:apply_text_color(i)
     self:append(self.items[i])
-end
-
-function Menu:set_color(code)
-    self:append('{\\1c&H')
-    self:append(code:sub(5, 6))
-    self:append(code:sub(3, 4))
-    self:append(code:sub(1, 2))
-    self:append('&\\1a&H10&}')
 end
 
 function Menu:draw_item(i)
     self:new_event()
     self:pos(self.pos_x, self.pos_y)
-    self:apply_color(i)
+    self:apply_rect_color(i)
     self:draw_start()
     self:rect_cw(0, 0 + (i - 1) * self.rect_height, self.rect_width, i * self.rect_height)
     self:draw_stop()
