@@ -89,8 +89,8 @@ local function get_extension(filename)
     return filename:match("^.+(%.%w+)$")
 end
 
-local function sync_sub_fn()
-    local video_path = mp.get_property("path")
+local function sync_sub_fn(timed_sub_path)
+    local reference_file_path = timed_sub_path or mp.get_property("path")
     local subtitle_path = get_active_subtitle_track_path()
 
     if file_exists(subtitle_path) == false then
@@ -103,10 +103,10 @@ local function sync_sub_fn()
     local ret
     if config.subsync_tool ~= "ffsubsync" then
         notify("Starting alass...", nil, 2)
-        ret = subprocess { config.subsync_path, video_path, subtitle_path, retimed_subtitle_path }
+        ret = subprocess { config.subsync_path, reference_file_path, subtitle_path, retimed_subtitle_path }
     else
         notify("Starting ffsubsync...", nil, 2)
-        ret = subprocess { config.subsync_path, video_path, "-i", subtitle_path, "-o", retimed_subtitle_path }
+        ret = subprocess { config.subsync_path, reference_file_path, "-i", subtitle_path, "-o", retimed_subtitle_path }
     end
 
     if ret == nil then
