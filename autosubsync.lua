@@ -259,3 +259,49 @@ function Menu:down()
     self:draw()
 end
 
+------------------------------------------------------------
+-- Menu actions & bindings
+
+menu = Menu:new {
+    items = { 'Sync to audio', 'Sync to an internal subtitle', 'Cancel' },
+    pos_x = 50,
+    pos_y = 50,
+}
+
+menu.keybinds = {
+    { key = 'h', fn = function() menu.close() end },
+    { key = 'j', fn = function() menu:down() end },
+    { key = 'k', fn = function() menu:up() end },
+    { key = 'l', fn = function() menu.act() end },
+    { key = 'down', fn = function() menu:down() end },
+    { key = 'up', fn = function() menu:up() end },
+    { key = 'Enter', fn = function() menu.act() end },
+    { key = 'ESC', fn = function() menu.close() end },
+}
+
+menu.act = function()
+    menu.close()
+
+    if menu.selected == 1 then
+        sync_sub_fn()
+    elseif menu.selected == 2 then
+        sync_to_internal()
+    elseif menu.selected == 3 then
+        menu.close()
+    end
+end
+
+menu.open = function()
+    for _, val in pairs(menu.keybinds) do
+        mp.add_forced_key_binding(val.key, val.key, val.fn)
+    end
+    menu:draw()
+end
+
+menu.close = function()
+    for _, val in pairs(menu.keybinds) do
+        mp.remove_key_binding(val.key)
+    end
+    menu:erase()
+end
+
