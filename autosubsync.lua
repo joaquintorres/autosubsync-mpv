@@ -7,6 +7,7 @@ local mpopt = require('mp.options')
 -- Options can be changed here or in a separate config file.
 -- Config path: ~/.config/mpv/script-opts/autosubsync.conf
 local config = {
+    ffmpeg_path = "/usr/bin/ffmpeg",
     subsync_path = "",  -- Replace the following line if the location of ffsubsync differs from the defaults
     subsync_tool = "ffsubsync",
 }
