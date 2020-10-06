@@ -6,46 +6,71 @@ and it's meant to work nicely alongside `autosub`,
 [trueautosub](https://github.com/fullmetalsheep/mpv-iina-scripts)
 or similar scripts.
 
-This branch tests experimental support for 
-[alass](https://github.com/kaegi/alass) (and tools with similar 
-syntax). This hasn't been fully tested yet but appears to work in 
-GNU/Linux. The basic idea is to first get it to work properly 
-with one alternative subsync tool, and then incorporate support
-for most.
+### Installation
+1. Install [FFmpeg](https://wiki.archlinux.org/index.php/FFmpeg):
+    ```
+    $ pacman -S ffmpeg
+    ```
+    Windows users have to manually install FFmpeg from [here](https://ffmpeg.zeranoe.com/builds/). 
+2. Install your retiming program of choice,
+[ffsubsync](https://github.com/smacke/ffsubsync)
+or [alass](https://github.com/kaegi/alass):
+    ```
+    $ pip install ffsubsync
+    ```
+    ```
+    $ trizen -S alass-git # for Arch Linux users
+    ```
 
-### Usage
-1. Install [ffsubsync](https://github.com/smacke/ffsubsync).
-You can simply use `pip install ffsubsync`,
-assuming you already have `ffmpeg` installed.
-Alternatively, install [alass](https://github.com/kaegi/alass).
-2. Download `autosubsync.lua` or clone the repo.
-3. If your `ffsubsync` path isn't the default,
-create a config file at `~/.config/mpv/script-opts/autosubsync.conf` 
-(GNU/Linux) or `%AppData%\mpv\script-opts\` (Windows)
-and add the correct path. For example:
+3. Download `autosubsync.lua` or clone the repo.
+4. Save `autosubsync.lua` to your scripts folder.
+
+    | GNU/Linux | Windows |
+    |---|---|
+    | `~/.config/mpv/scripts` | `%AppData%\mpv\scripts\` | 
+
+### Configuration
+Create a config file:
+
+| GNU/Linux | Windows |
+|---|---|
+| `~/.config/mpv/script-opts/autosubsync.conf` | `%AppData%\mpv\script-opts\autosubsync.conf` | 
+
+Example config:
 ```
-subsync_path=/usr/local/bin/ffsubsync
+# Absolute path to the ffmpeg executable
+#ffmpeg_path=C:/Program Files/ffmpeg/bin/ffmpeg.exe
+ffmpeg_path=/usr/bin/ffmpeg
+
+# Preferred retiming tool
+#subsync_tool=ffsubsync
+subsync_tool=alass
+
+# If your `ffsubsync` path isn't the default, and add the correct path. 
+# For example:
+#subsync_path=/usr/local/bin/ffsubsync
+#subsync_path=/home/user/.local/bin/ffsubsync
+#subsync_path=C:/Program Files/ffsubsync/ffsubsync.exe
+
+If you'd like to use `alass`, uncomment these lines,
+where `subsync_path` now contains your `alass` path.
+#subsync_path=C:/Program Files/ffmpeg/bin/alass.exe
+#subsync_path=/usr/local/bin/alass
+subsync_path=/usr/bin/alass
 ```
+
+### Notes
 * In Windows you need to use forward slashes 
 or double backslashes for your path,
 like `"C:\\Users\\YourPath\\Scripts\\ffsubsync"`
 or `"C:/Users/YourPath/Scripts/ffsubsync"`,
-or else it won't work. 
+or else it won't work.
 
 * In GNU/Linux you can use `which ffsubsync` to find out where it is.
-
-* If you'd like to use `alass`, add these lines to your `autosubsync.conf` file:
-```
-subsync_path=/usr/local/bin/alass
-subsync_tool=alass
-```
-where `subsync_path` now contains your `alass` path.
  
-4. Move `autosubsync.lua` to your scripts folder.
-This is typically in `~/.config/mpv/scripts` (GNU/Linux)
-or `%AppData%\mpv\scripts\` (Windows).
+### Usage
 
-5. When you have an out of sync sub, press `n` to synchronize it.
+When you have an out of sync sub, press `n` to synchronize it.
 
 `ffsubsync` can typically take up to about 20-30 seconds
 to synchronize (I've seen it take as much as 2 minutes
