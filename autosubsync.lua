@@ -127,6 +127,11 @@ local function sync_sub_fn(timed_sub_path)
 end
 
 local function sync_to_internal()
+    if not file_exists(config.ffmpeg_path) then
+        notify("Can't find ffmpeg executable.\nPlease specify the correct path in the config.", "error", 5)
+        return
+    end
+
     local extracted_sub_filename = os.tmpname()
     os.remove(extracted_sub_filename)
     extracted_sub_filename = extracted_sub_filename .. '.srt'
