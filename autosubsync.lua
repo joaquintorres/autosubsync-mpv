@@ -274,6 +274,10 @@ menu = Menu:new {
     items = { 'Sync to audio', 'Sync to an internal subtitle', 'Cancel' },
     pos_x = 50,
     pos_y = 50,
+    text_color = 'fff5da',
+    border_color = '2f1728',
+    active_color = 'ff6b71',
+    inactive_color = 'fff5da',
 }
 
 menu.keybinds = {
