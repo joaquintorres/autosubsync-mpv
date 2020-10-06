@@ -161,3 +161,101 @@ if config.subsync_path == "" then
     end
 end
 mp.add_key_binding("n", "auto_sync_subs", sync_sub_fn)
+
+------------------------------------------------------------
+-- Menu visuals
+
+local assdraw = require('mp.assdraw')
+
+Menu = assdraw.ass_new()
+Menu.__index = Menu
+
+function Menu:new(o)
+    o = o or {}
+    o.selected = o.selected or 1
+    o.canvas_width = o.canvas_width or 1280
+    o.canvas_height = o.canvas_height or 720
+    o.pos_x = o.pos_x or 0
+    o.pos_y = o.pos_y or 0
+    o.rect_width = o.rect_width or 250
+    o.rect_height = o.rect_height or 40
+    o.active_color = o.active_color or 'ffffff'
+    o.inactive_color = o.inactive_color or 'aaaaaa'
+    return setmetatable(o, self)
+end
+
+function Menu:set_position(x, y)
+    self.pos_x = x
+    self.pos_y = y
+end
+
+function Menu:font_size(size)
+    self:append(string.format([[{\fs%s}]], size))
+end
+
+function Menu:apply_color(i)
+    if i == self.selected then
+        self:set_color(self.active_color)
+    else
+        self:set_color(self.inactive_color)
+    end
+end
+
+function Menu:draw_text(i)
+    local padding = 5
+    local font_size = 25
+
+    self:new_event()
+    self:pos(self.pos_x + padding, self.pos_y + self.rect_height * (i - 1) + padding)
+    self:font_size(font_size)
+    self:apply_color(i)
+    self:append(self.items[i])
+end
+
+function Menu:set_color(code)
+    self:append('{\\1c&H')
+    self:append(code:sub(5, 6))
+    self:append(code:sub(3, 4))
+    self:append(code:sub(1, 2))
+    self:append('&\\1a&H10&}')
+end
+
+function Menu:draw_item(i)
+    self:new_event()
+    self:pos(self.pos_x, self.pos_y)
+    self:apply_color(i)
+    self:draw_start()
+    self:rect_cw(0, 0 + (i - 1) * self.rect_height, self.rect_width, i * self.rect_height)
+    self:draw_stop()
+    self:draw_text(i)
+end
+
+function Menu:draw()
+    self.text = ''
+    for i, _ in ipairs(self.items) do
+        self:draw_item(i)
+    end
+
+    mp.set_osd_ass(self.canvas_width, self.canvas_height, self.text)
+end
+
+function Menu:erase()
+    mp.set_osd_ass(self.canvas_width, self.canvas_height, '')
+end
+
+function Menu:up()
+    self.selected = self.selected - 1
+    if self.selected == 0 then
+        self.selected = #self.items
+    end
+    self:draw()
+end
+
+function Menu:down()
+    self.selected = self.selected + 1
+    if self.selected > #self.items then
+        self.selected = 1
+    end
+    self:draw()
+end
+
