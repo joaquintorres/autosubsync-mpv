@@ -125,7 +125,6 @@ local function sync_sub_fn(timed_sub_path)
     end
 end
 
--- Entry point
 local function sync_to_internal()
     local extracted_sub_filename = os.tmpname()
     os.remove(extracted_sub_filename)
@@ -160,7 +159,6 @@ if config.subsync_path == "" then
         config.subsync_path = get_default_subsync_path()
     end
 end
-mp.add_key_binding("n", "auto_sync_subs", sync_sub_fn)
 
 ------------------------------------------------------------
 -- Menu visuals
@@ -305,3 +303,7 @@ menu.close = function()
     menu:erase()
 end
 
+------------------------------------------------------------
+-- Entry point
+
+mp.add_key_binding("n", "autosubsync-menu", menu.open)
