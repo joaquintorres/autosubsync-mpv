@@ -165,6 +165,7 @@ local function sync_to_internal()
     end
 
     sync_sub_fn(extracted_sub_filename)
+    os.remove(extracted_sub_filename)
 end
 
 if config.subsync_path == "" then
