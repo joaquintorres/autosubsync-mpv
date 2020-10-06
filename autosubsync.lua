@@ -94,6 +94,13 @@ local function sync_sub_fn(timed_sub_path)
     local reference_file_path = timed_sub_path or mp.get_property("path")
     local subtitle_path = get_active_subtitle_track_path()
 
+    if not file_exists(config.subsync_path) then
+        notify(string.format(
+                "Can't find %s executable.\nPlease specify the correct path in the config.",
+                config.subsync_tool), "error", 5)
+        return
+    end
+
     if file_exists(subtitle_path) == false then
         notify(table.concat { "Subtitle synchronization failed:\nCouldn't find ", subtitle_path or "subtitle file." }, "error", 3)
         return
