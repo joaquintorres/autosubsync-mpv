@@ -126,6 +126,32 @@ local function sync_sub_fn(timed_sub_path)
 end
 
 -- Entry point
+local function sync_to_internal()
+    local extracted_sub_filename = os.tmpname()
+    os.remove(extracted_sub_filename)
+    extracted_sub_filename = extracted_sub_filename .. '.srt'
+
+    local ret = subprocess {
+        config.ffmpeg_path,
+        "-hide_banner",
+        "-nostdin",
+        "-y",
+        "-loglevel", "quiet",
+        "-an",
+        "-vn",
+        "-i", mp.get_property("path"),
+        "-f", "srt",
+        extracted_sub_filename
+    }
+
+    if ret == nil or ret.status ~= 0 then
+        notify("Couldn't extract internal subtitle.\nMake sure the video has internal subtitles.", "error", 7)
+        return
+    end
+
+    sync_sub_fn(extracted_sub_filename)
+end
+
 if config.subsync_path == "" then
     if config.subsync_tool ~= "ffsubsync" then
         -- silently guess alass path if it's not set
