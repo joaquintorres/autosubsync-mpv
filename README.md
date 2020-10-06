@@ -6,10 +6,14 @@ and it's meant to work nicely alongside `autosub`,
 [trueautosub](https://github.com/fullmetalsheep/mpv-iina-scripts)
 or similar scripts.
 
-For experimental support of [alass](https://github.com/kaegi/alass) 
-check out this [branch](https://github.com/joaquintorres/autosubsync-mpv/tree/alass).
+For support of [alass](https://github.com/kaegi/alass), other subtitle formats, 
+synchronization using an existing subtitle, and some other things check
+out [this branch](https://github.com/joaquintorres/autosubsync-mpv/tree/alass).
+You should probably use this one if you're using an updated version of `mpv`, 
+since `master` branch is intended to support older, deprecated versions such as 
+the ones in official Debian/Ubuntu repos.
 
-### Usage
+### Installation
 1. Install [ffsubsync](https://github.com/smacke/ffsubsync).
 You can simply use `pip install ffsubsync`,
 assuming you already have `ffmpeg` installed.
@@ -36,7 +40,8 @@ need to add your `.conf` file to `lua-settings` instead of `script-opts`.
 This is typically in `~/.config/mpv/scripts` (GNU/Linux)
 or `%AppData%\mpv\scripts\` (Windows).
 
-5. When you have an out of sync sub, press `n` to synchronize it.
+### Usage
+When you have an out of sync sub, press `n` to synchronize it.
 
 `ffsubsync` can typically take up to about 20-30 seconds
 to synchronize (I've seen it take as much as 2 minutes
