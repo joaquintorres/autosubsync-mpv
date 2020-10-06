@@ -52,7 +52,7 @@ subsync_tool=alass
 #subsync_path=/home/user/.local/bin/ffsubsync
 #subsync_path=C:/Program Files/ffsubsync/ffsubsync.exe
 
-If you'd like to use `alass`, uncomment these lines,
+If you'd like to use `alass`, uncomment or edit one of these lines,
 where `subsync_path` now contains your `alass` path.
 #subsync_path=C:/Program Files/ffmpeg/bin/alass.exe
 #subsync_path=/usr/local/bin/alass
