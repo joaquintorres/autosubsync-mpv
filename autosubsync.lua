@@ -101,7 +101,7 @@ local function sync_sub_fn(timed_sub_path)
         return
     end
 
-    if file_exists(subtitle_path) == false then
+    if not file_exists(subtitle_path) then
         notify(table.concat {
             "Subtitle synchronization failed:\nCouldn't find ",
             subtitle_path or "external subtitle file."
