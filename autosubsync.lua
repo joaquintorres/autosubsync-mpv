@@ -127,7 +127,7 @@ local function sync_sub_fn(timed_sub_path)
 
     if ret.status == 0 then
         if mp.commandv("sub_add", retimed_subtitle_path) then
-            notify("Subtitle synchronized.")
+            notify("Subtitle synchronized.", nil, 2)
         else
             notify("Error: couldn't add synchronized subtitle.", "error", 3)
         end
@@ -146,6 +146,7 @@ local function sync_to_internal()
     os.remove(extracted_sub_filename)
     extracted_sub_filename = extracted_sub_filename .. '.srt'
 
+    notify("Extracting internal subtitles...", nil, 3)
     local ret = subprocess {
         config.ffmpeg_path,
         "-hide_banner",
