@@ -10,6 +10,7 @@ local config = {
     ffmpeg_path = "/usr/bin/ffmpeg",
     subsync_path = "",  -- Replace the following line if the location of ffsubsync differs from the defaults
     subsync_tool = "ffsubsync",
+    unload_old_sub = true,
 }
 mpopt.read_options(config, 'autosubsync')
 
@@ -93,6 +94,7 @@ end
 local function sync_sub_fn(timed_sub_path)
     local reference_file_path = timed_sub_path or mp.get_property("path")
     local subtitle_path = get_active_subtitle_track_path()
+    local subtitle_id = mp.get_property("sid")
 
     if not file_exists(config.subsync_path) then
         notify(string.format(
@@ -128,6 +130,7 @@ local function sync_sub_fn(timed_sub_path)
     if ret.status == 0 then
         if mp.commandv("sub_add", retimed_subtitle_path) then
             notify("Subtitle synchronized.", nil, 2)
+            if config.unload_old_sub then mp.commandv("sub_remove", subtitle_id) end
         else
             notify("Error: couldn't add synchronized subtitle.", "error", 3)
         end
