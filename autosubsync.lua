@@ -145,9 +145,12 @@ local function sync_to_internal()
         return
     end
 
-    local extracted_sub_filename = os.tmpname()
-    os.remove(extracted_sub_filename)
-    extracted_sub_filename = extracted_sub_filename .. '.srt'
+    local extracted_sub_filename
+    if os.name() == "Windows" then
+        extracted_sub_filename = utils.join_path(os.getenv('TEMP'), 'autosubsync_extracted.srt')
+    else
+        extracted_sub_filename = '/tmp/autosubsync_extracted.srt'
+    end
 
     notify("Extracting internal subtitles...", nil, 3)
     local ret = subprocess {
