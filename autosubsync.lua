@@ -67,20 +67,21 @@ local function subprocess(args)
     }
 end
 
-local function get_active_subtitle_track_path()
-    local sub_track_path
-    local tracks_count = mp.get_property_number("track-list/count")
-
-    for i = 1, tracks_count do
-        local track_type = mp.get_property(string.format("track-list/%d/type", i))
-        local track_selected = mp.get_property(string.format("track-list/%d/selected", i))
-
-        if track_type == "sub" and track_selected == "yes" then
-            sub_track_path = mp.get_property(string.format("track-list/%d/external-filename", i))
-            break
+local function get_active_track(track_type)
+    local track_list = mp.get_property_native('track-list')
+    for num, track in ipairs(track_list) do
+        if track.type == track_type and track.selected == true then
+            return num, track
         end
     end
-    return sub_track_path
+    return nil
+end
+
+local function get_active_subtitle_track_path()
+    local _, track = get_active_track('sub')
+    if track and track.external == true then
+        return track['external-filename']
+    end
 end
 
 local function remove_extension(filename)
@@ -119,7 +120,12 @@ local function sync_sub_fn(timed_sub_path)
         ret = subprocess { config.subsync_path, reference_file_path, subtitle_path, retimed_subtitle_path }
     else
         notify("Starting ffsubsync...", nil, 2)
-        ret = subprocess { config.subsync_path, reference_file_path, "-i", subtitle_path, "-o", retimed_subtitle_path }
+        local args = { config.subsync_path, reference_file_path, "-i", subtitle_path, "-o", retimed_subtitle_path }
+        if not timed_sub_path then
+            table.insert(args, '--reference-stream')
+            table.insert(args, '0:' .. get_active_track('audio'))
+        end
+        ret = subprocess(args)
     end
 
     if ret == nil then
