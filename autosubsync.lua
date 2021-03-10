@@ -86,7 +86,7 @@ local function sync_sub_fn()
 
     notify("Starting ffsubsync...", nil, 2)
 
-    local retimed_subtitle_path = remove_extension(subtitle_path) .. '_retimed.srt'
+    local retimed_subtitle_path = remove_extension(subtitle_path) .. '_retimed.' .. subtitle_path:match("[^.]+$")
 
     local t = { args = { config.subsync_path, video_path, "-i", subtitle_path, "-o", retimed_subtitle_path } }
     local ret = utils.subprocess(t)
