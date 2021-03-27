@@ -1,18 +1,34 @@
--- default keybinding: n
--- add the following to your input.conf to change the default keybinding:
--- keyname script_binding auto_sync_subs
+-- Usage:
+--  default keybinding: n
+--  add the following to your input.conf to change the default keybinding:
+--  keyname script_binding auto_sync_subs
+
 local utils = require('mp.utils')
 local mpopt = require('mp.options')
+local tool_select
 
+-- Config
 -- Options can be changed here or in a separate config file.
 -- Config path: ~/.config/mpv/script-opts/autosubsync.conf
 local config = {
-    ffmpeg_path = "/usr/bin/ffmpeg",
-    subsync_path = "", -- Replace the following line if the location of ffsubsync differs from the defaults
-    subsync_tool = "ffsubsync",
+    -- Change the following lines if the locations of executables differ from the defaults
+    -- If set to empty, the path will be guessed.
+    ffmpeg_path = "",
+    ffsubsync_path = "",
+    alass_path = "",
+
+    -- Choose what tool to use. Allowed options: ffsubsync, alass, ask.
+    -- If set to ask, the add-on will ask to choose the tool every time.
+    subsync_tool = "ask",
+
+    -- After retiming, tell mpv to forget the original subtitle track.
     unload_old_sub = true,
 }
 mpopt.read_options(config, 'autosubsync')
+
+local function is_empty(var)
+    return var == nil or var == '' or (type(var) == 'table' and next(var) == nil)
+end
 
 -- Snippet borrowed from stackoverflow to get the operating system
 -- originally found at: https://stackoverflow.com/a/30960054
@@ -28,15 +44,6 @@ local os_name = (function()
     end
 end)()
 
-local function get_default_subsync_path()
-    -- Chooses the default location of the ffsubsync executable depending on the operating system
-    if os_name() == "Windows" then
-        return utils.join_path(os.getenv("LocalAppData"), "Programs\\Python\\Python38\\scripts\\ffsubsync.exe")
-    else
-        return utils.join_path(os.getenv("HOME"), ".local/bin/ffsubsync")
-    end
-end
-
 -- Courtesy of https://stackoverflow.com/questions/4990990/check-if-a-file-exists-with-lua
 local function file_exists(filepath)
     if not filepath then
@@ -49,6 +56,19 @@ local function file_exists(filepath)
     else
         return false
     end
+end
+
+local function find_executable(name)
+    local os_path = os.getenv("PATH") or ""
+    local fallback_path = utils.join_path("/usr/bin", name)
+    local exec_path
+    for path in os_path:gmatch("[^:]+") do
+        exec_path = utils.join_path(path, name)
+        if file_exists(exec_path) then
+            return exec_path
+        end
+    end
+    return fallback_path
 end
 
 local function notify(message, level, duration)
@@ -99,11 +119,12 @@ end
 local function sync_sub_fn(timed_sub_path)
     local reference_file_path = timed_sub_path or mp.get_property("path")
     local subtitle_path = get_active_subtitle_track_path()
+    local subsync_tool = is_empty(config.subsync_tool) and tool_select.last_choice or 'ffsubsync'
 
-    if not file_exists(config.subsync_path) then
+    if not file_exists(config[subsync_tool .. '_path']) then
         notify(string.format(
                 "Can't find %s executable.\nPlease specify the correct path in the config.",
-                config.subsync_tool), "error", 5)
+                subsync_tool), "error", 5)
         return
     end
 
@@ -118,17 +139,17 @@ local function sync_sub_fn(timed_sub_path)
     local retimed_subtitle_path = mkfp_retimed(subtitle_path)
 
     local ret
-    if config.subsync_tool ~= "ffsubsync" then
-        notify("Starting alass...", nil, 2)
-        ret = subprocess { config.subsync_path, reference_file_path, subtitle_path, retimed_subtitle_path }
-    else
+    if subsync_tool == "ffsubsync" then
         notify("Starting ffsubsync...", nil, 2)
-        local args = { config.subsync_path, reference_file_path, "-i", subtitle_path, "-o", retimed_subtitle_path }
+        local args = { config.ffsubsync_path, reference_file_path, "-i", subtitle_path, "-o", retimed_subtitle_path }
         if not timed_sub_path then
             table.insert(args, '--reference-stream')
             table.insert(args, '0:' .. get_active_track('audio'))
         end
         ret = subprocess(args)
+    else
+        notify("Starting alass...", nil, 2)
+        ret = subprocess { config.alass_path, reference_file_path, subtitle_path, retimed_subtitle_path }
     end
 
     if ret == nil then
@@ -191,15 +212,6 @@ local function sync_to_internal()
 
     sync_sub_fn(extracted_sub_filename)
     os.remove(extracted_sub_filename)
-end
-
-if config.subsync_path == "" then
-    if config.subsync_tool ~= "ffsubsync" then
-        -- silently guess alass path if it's not set
-        config.subsync_path = file_exists('/usr/bin/alass') and '/usr/bin/alass' or '/usr/local/bin/alass'
-    else
-        config.subsync_path = get_default_subsync_path()
-    end
 end
 
 ------------------------------------------------------------
@@ -320,7 +332,6 @@ local menu = Menu:new {
     active_color = 'ff6b71',
     inactive_color = 'fff5da',
 }
-local tool_select
 
 function menu:get_keybindings()
     return {
@@ -341,6 +352,10 @@ function menu:new(o)
     return setmetatable(o, self)
 end
 
+function menu:should_open_tool_selection()
+    return is_empty(config.subsync_tool) or config.subsync_tool == "ask"
+end
+
 function menu:act()
     self:close()
 
@@ -348,10 +363,15 @@ function menu:act()
         return
     end
 
-    if config.subsync_tool == "" then
+    if self:should_open_tool_selection() then
         tool_select:open()
+        return
     end
 
+    self:call_subsync()
+end
+
+function menu:call_subsync()
     if self.selected == 1 then
         sync_sub_fn()
     elseif self.selected == 2 then
@@ -379,20 +399,36 @@ end
 -- Engine selector
 
 tool_select = menu:new {
-    items = { 'ffsubsync', 'alass', 'Cancel' },
+    items = { 'ffsubsync', 'alass', 'Cancel'},
+    last_choice = 'ffsubsync'
 }
 
 function tool_select:act()
     self:close()
 
     if self.selected == 1 then
-        config.subsync_tool = 'ffsubsync'
+        self.last_choice = 'ffsubsync'
     elseif self.selected == 2 then
-        config.subsync_tool = 'alass'
+        self.last_choice = 'alass'
+    elseif self.selected == 3 then
+        return
+    end
+
+    menu:call_subsync()
+end
+
+------------------------------------------------------------
+-- Initialize the addon
+
+local function init()
+    for _, executable in pairs {'ffmpeg', 'ffsubsync', 'alass'} do
+        local config_key = executable .. '_path'
+        config[config_key] = is_empty(config[config_key]) and find_executable(executable)
     end
 end
 
 ------------------------------------------------------------
 -- Entry point
 
+init()
 mp.add_key_binding("n", "autosubsync-menu", function() menu:open() end)
