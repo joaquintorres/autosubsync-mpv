@@ -92,6 +92,10 @@ local function get_extension(filename)
     return filename:match("^.+(%.%w+)$")
 end
 
+local function mkfp_retimed(sub_path)
+    return table.concat { remove_extension(sub_path), '_retimed', get_extension(sub_path) }
+end
+
 local function sync_sub_fn(timed_sub_path)
     local reference_file_path = timed_sub_path or mp.get_property("path")
     local subtitle_path = get_active_subtitle_track_path()
@@ -111,7 +115,7 @@ local function sync_sub_fn(timed_sub_path)
         return
     end
 
-    local retimed_subtitle_path = table.concat { remove_extension(subtitle_path), '_retimed', get_extension(subtitle_path) }
+    local retimed_subtitle_path = mkfp_retimed(subtitle_path)
 
     local ret
     if config.subsync_tool ~= "ffsubsync" then
