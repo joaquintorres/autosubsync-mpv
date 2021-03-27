@@ -16,7 +16,7 @@ mpopt.read_options(config, 'autosubsync')
 
 -- Snippet borrowed from stackoverflow to get the operating system
 -- originally found at: https://stackoverflow.com/a/30960054
-os.name = (function()
+local os_name = (function()
     if os.getenv("HOME") == nil then
         return function()
             return "Windows"
@@ -30,7 +30,7 @@ end)()
 
 local function get_default_subsync_path()
     -- Chooses the default location of the ffsubsync executable depending on the operating system
-    if os.name() == "Windows" then
+    if os_name() == "Windows" then
         return utils.join_path(os.getenv("LocalAppData"), "Programs\\Python\\Python38\\scripts\\ffsubsync.exe")
     else
         return utils.join_path(os.getenv("HOME"), ".local/bin/ffsubsync")
@@ -151,7 +151,7 @@ local function sync_sub_fn(timed_sub_path)
 end
 
 local os_temp = (function()
-    if os.name() == "Windows" then
+    if os_name() == "Windows" then
         return function()
             return os.getenv('TEMP')
         end
