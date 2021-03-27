@@ -144,18 +144,25 @@ local function sync_sub_fn(timed_sub_path)
     end
 end
 
+local os_temp = (function()
+    if os.name() == "Windows" then
+        return function()
+            return os.getenv('TEMP')
+        end
+    else
+        return function()
+            return '/tmp/'
+        end
+    end
+end)()
+
 local function sync_to_internal()
     if not file_exists(config.ffmpeg_path) then
         notify("Can't find ffmpeg executable.\nPlease specify the correct path in the config.", "error", 5)
         return
     end
 
-    local extracted_sub_filename
-    if os.name() == "Windows" then
-        extracted_sub_filename = utils.join_path(os.getenv('TEMP'), 'autosubsync_extracted.srt')
-    else
-        extracted_sub_filename = '/tmp/autosubsync_extracted.srt'
-    end
+    local extracted_sub_filename = utils.join_path(os_temp(), 'autosubsync_extracted.srt')
 
     notify("Extracting internal subtitles...", nil, 3)
     local ret = subprocess {
