@@ -158,10 +158,11 @@ local function sync_sub_fn(timed_sub_path)
     end
 
     if ret.status == 0 then
+        local old_sid = mp.get_property("sid")
         if mp.commandv("sub_add", retimed_subtitle_path) then
             notify("Subtitle synchronized.", nil, 2)
             if config.unload_old_sub then
-                mp.commandv("sub_remove", mp.get_property("sid"))
+                mp.commandv("sub_remove", old_sid)
             end
         else
             notify("Error: couldn't add synchronized subtitle.", "error", 3)
