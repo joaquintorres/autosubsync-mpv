@@ -207,10 +207,10 @@ end
 
 local assdraw = require('mp.assdraw')
 
-Menu = assdraw.ass_new()
-Menu.__index = Menu
+local Menu = assdraw.ass_new()
 
 function Menu:new(o)
+    self.__index = self
     o = o or {}
     o.selected = o.selected or 1
     o.canvas_width = o.canvas_width or 1280
@@ -311,7 +311,7 @@ end
 ------------------------------------------------------------
 -- Menu actions & bindings
 
-menu = Menu:new {
+local menu = Menu:new {
     items = { 'Sync to audio', 'Sync to an internal subtitle', 'Cancel' },
     pos_x = 50,
     pos_y = 50,
@@ -320,45 +320,79 @@ menu = Menu:new {
     active_color = 'ff6b71',
     inactive_color = 'fff5da',
 }
+local tool_select
 
-menu.keybinds = {
-    { key = 'h', fn = function() menu.close() end },
-    { key = 'j', fn = function() menu:down() end },
-    { key = 'k', fn = function() menu:up() end },
-    { key = 'l', fn = function() menu.act() end },
-    { key = 'down', fn = function() menu:down() end },
-    { key = 'up', fn = function() menu:up() end },
-    { key = 'Enter', fn = function() menu.act() end },
-    { key = 'ESC', fn = function() menu.close() end },
-}
+function menu:get_keybindings()
+    return {
+        { key = 'h', fn = function() self:close() end },
+        { key = 'j', fn = function() self:down() end },
+        { key = 'k', fn = function() self:up() end },
+        { key = 'l', fn = function() self:act() end },
+        { key = 'down', fn = function() self:down() end },
+        { key = 'up', fn = function() self:up() end },
+        { key = 'Enter', fn = function() self:act() end },
+        { key = 'ESC', fn = function() self:close() end },
+    }
+end
 
-menu.act = function()
-    menu.close()
+function menu:new(o)
+    self.__index = self
+    o = o or {}
+    return setmetatable(o, self)
+end
 
-    if menu.selected == 1 then
+function menu:act()
+    self:close()
+
+    if self.selected == 3 then
+        return
+    end
+
+    if config.subsync_tool == "" then
+        tool_select:open()
+    end
+
+    if self.selected == 1 then
         sync_sub_fn()
-    elseif menu.selected == 2 then
+    elseif self.selected == 2 then
         sync_to_internal()
-    elseif menu.selected == 3 then
-        menu.close()
     end
 end
 
-menu.open = function()
-    for _, val in pairs(menu.keybinds) do
+function menu:open()
+    self.selected = 1
+    for _, val in pairs(self:get_keybindings()) do
         mp.add_forced_key_binding(val.key, val.key, val.fn)
     end
-    menu:draw()
+    self:draw()
 end
 
-menu.close = function()
-    for _, val in pairs(menu.keybinds) do
+function menu:close()
+    for _, val in pairs(self:get_keybindings()) do
         mp.remove_key_binding(val.key)
     end
-    menu:erase()
+    self:erase()
+end
+
+
+------------------------------------------------------------
+-- Engine selector
+
+tool_select = menu:new {
+    items = { 'ffsubsync', 'alass', 'Cancel' },
+}
+
+function tool_select:act()
+    self:close()
+
+    if self.selected == 1 then
+        config.subsync_tool = 'ffsubsync'
+    elseif self.selected == 2 then
+        config.subsync_tool = 'alass'
+    end
 end
 
 ------------------------------------------------------------
 -- Entry point
 
-mp.add_key_binding("n", "autosubsync-menu", menu.open)
+mp.add_key_binding("n", "autosubsync-menu", function() menu:open() end)
