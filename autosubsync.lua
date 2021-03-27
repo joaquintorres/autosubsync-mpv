@@ -8,7 +8,7 @@ local mpopt = require('mp.options')
 -- Config path: ~/.config/mpv/script-opts/autosubsync.conf
 local config = {
     ffmpeg_path = "/usr/bin/ffmpeg",
-    subsync_path = "",  -- Replace the following line if the location of ffsubsync differs from the defaults
+    subsync_path = "", -- Replace the following line if the location of ffsubsync differs from the defaults
     subsync_tool = "ffsubsync",
     unload_old_sub = true,
 }
@@ -139,7 +139,9 @@ local function sync_sub_fn(timed_sub_path)
     if ret.status == 0 then
         if mp.commandv("sub_add", retimed_subtitle_path) then
             notify("Subtitle synchronized.", nil, 2)
-            if config.unload_old_sub then mp.commandv("sub_remove", mp.get_property("sid")) end
+            if config.unload_old_sub then
+                mp.commandv("sub_remove", mp.get_property("sid"))
+            end
         else
             notify("Error: couldn't add synchronized subtitle.", "error", 3)
         end
