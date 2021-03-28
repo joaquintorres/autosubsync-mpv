@@ -1,7 +1,7 @@
 -- Usage:
 --  default keybinding: n
 --  add the following to your input.conf to change the default keybinding:
---  keyname script_binding auto_sync_subs
+--  keyname script_binding autosubsync-menu
 
 local utils = require('mp.utils')
 local mpopt = require('mp.options')
@@ -424,7 +424,7 @@ end
 local function init()
     for _, executable in pairs {'ffmpeg', 'ffsubsync', 'alass'} do
         local config_key = executable .. '_path'
-        config[config_key] = is_empty(config[config_key]) and find_executable(executable)
+        config[config_key] = is_empty(config[config_key]) and find_executable(executable) or config[config_key]
     end
 end
 
