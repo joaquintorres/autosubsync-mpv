@@ -5,7 +5,7 @@
 
 local utils = require('mp.utils')
 local mpopt = require('mp.options')
-local tool_select
+local engine_selector
 
 -- Config
 -- Options can be changed here or in a separate config file.
@@ -116,15 +116,28 @@ local function mkfp_retimed(sub_path)
     return table.concat { remove_extension(sub_path), '_retimed', get_extension(sub_path) }
 end
 
+local function engine_is_set()
+    if is_empty(config.subsync_tool) or config.subsync_tool == "ask" then
+        return false
+    else
+        return true
+    end
+end
+
+local function get_engine_name()
+    return engine_is_set() and config.subsync_tool or engine_selector.last_choice
+end
+
 local function sync_sub_fn(timed_sub_path)
     local reference_file_path = timed_sub_path or mp.get_property("path")
     local subtitle_path = get_active_subtitle_track_path()
-    local subsync_tool = is_empty(config.subsync_tool) and tool_select.last_choice or 'ffsubsync'
+    local engine_name = get_engine_name()
+    local engine_path = config[engine_name .. '_path']
 
-    if not file_exists(config[subsync_tool .. '_path']) then
+    if not file_exists(engine_path) then
         notify(string.format(
                 "Can't find %s executable.\nPlease specify the correct path in the config.",
-                subsync_tool), "error", 5)
+                engine_name), "error", 5)
         return
     end
 
@@ -138,9 +151,10 @@ local function sync_sub_fn(timed_sub_path)
 
     local retimed_subtitle_path = mkfp_retimed(subtitle_path)
 
+    notify(string.format("Starting %s...", engine_name), nil, 2)
+
     local ret
-    if subsync_tool == "ffsubsync" then
-        notify("Starting ffsubsync...", nil, 2)
+    if engine_name == "ffsubsync" then
         local args = { config.ffsubsync_path, reference_file_path, "-i", subtitle_path, "-o", retimed_subtitle_path }
         if not timed_sub_path then
             table.insert(args, '--reference-stream')
@@ -148,7 +162,6 @@ local function sync_sub_fn(timed_sub_path)
         end
         ret = subprocess(args)
     else
-        notify("Starting alass...", nil, 2)
         ret = subprocess { config.alass_path, reference_file_path, subtitle_path, retimed_subtitle_path }
     end
 
@@ -353,8 +366,8 @@ function menu:new(o)
     return setmetatable(o, self)
 end
 
-function menu:should_open_tool_selection()
-    return is_empty(config.subsync_tool) or config.subsync_tool == "ask"
+function menu:should_open_engine_selector()
+    return not engine_is_set()
 end
 
 function menu:act()
@@ -364,8 +377,8 @@ function menu:act()
         return
     end
 
-    if self:should_open_tool_selection() then
-        tool_select:open()
+    if self:should_open_engine_selector() then
+        engine_selector:open()
         return
     end
 
@@ -399,12 +412,12 @@ end
 ------------------------------------------------------------
 -- Engine selector
 
-tool_select = menu:new {
+engine_selector = menu:new {
     items = { 'ffsubsync', 'alass', 'Cancel'},
     last_choice = 'ffsubsync'
 }
 
-function tool_select:act()
+function engine_selector:act()
     self:close()
 
     if self.selected == 1 then
