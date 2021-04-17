@@ -48,6 +48,18 @@ local os_name = (function()
     end
 end)()
 
+local os_temp = (function()
+    if os_name() == "Windows" then
+        return function()
+            return os.getenv('TEMP')
+        end
+    else
+        return function()
+            return '/tmp/'
+        end
+    end
+end)()
+
 -- Courtesy of https://stackoverflow.com/questions/4990990/check-if-a-file-exists-with-lua
 local function file_exists(filepath)
     if not filepath then
@@ -198,18 +210,6 @@ local function sync_subtitles(ref_sub_path)
         notify("Subtitle synchronization failed.", "error", 3)
     end
 end
-
-local os_temp = (function()
-    if os_name() == "Windows" then
-        return function()
-            return os.getenv('TEMP')
-        end
-    else
-        return function()
-            return '/tmp/'
-        end
-    end
-end)()
 
 local function sync_to_internal()
     if not file_exists(config.ffmpeg_path) then
