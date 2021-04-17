@@ -6,7 +6,8 @@
 local mp = require('mp')
 local utils = require('mp.utils')
 local mpopt = require('mp.options')
-local menu
+local menu = require('menu')
+local ref_selector
 local engine_selector
 local track_selector
 
@@ -246,115 +247,9 @@ local function sync_to_internal()
 end
 
 ------------------------------------------------------------
--- Menu visuals
-
-local assdraw = require('mp.assdraw')
-
-local Menu = assdraw.ass_new()
-
-function Menu:new(o)
-    self.__index = self
-    o = o or {}
-    o.selected = o.selected or 1
-    o.canvas_width = o.canvas_width or 1280
-    o.canvas_height = o.canvas_height or 720
-    o.pos_x = o.pos_x or 0
-    o.pos_y = o.pos_y or 0
-    o.rect_width = o.rect_width or 320
-    o.rect_height = o.rect_height or 40
-    o.active_color = o.active_color or 'ffffff'
-    o.inactive_color = o.inactive_color or 'aaaaaa'
-    o.border_color = o.border_color or '000000'
-    o.text_color = o.text_color or 'ffffff'
-
-    return setmetatable(o, self)
-end
-
-function Menu:set_position(x, y)
-    self.pos_x = x
-    self.pos_y = y
-end
-
-function Menu:font_size(size)
-    self:append(string.format([[{\fs%s}]], size))
-end
-
-function Menu:set_text_color(code)
-    self:append(string.format("{\\1c&H%s%s%s&\\1a&H05&}", code:sub(5, 6), code:sub(3, 4), code:sub(1, 2)))
-end
-
-function Menu:set_border_color(code)
-    self:append(string.format("{\\3c&H%s%s%s&}", code:sub(5, 6), code:sub(3, 4), code:sub(1, 2)))
-end
-
-function Menu:apply_text_color()
-    self:set_border_color(self.border_color)
-    self:set_text_color(self.text_color)
-end
-
-function Menu:apply_rect_color(i)
-    self:set_border_color(self.border_color)
-    if i == self.selected then
-        self:set_text_color(self.active_color)
-    else
-        self:set_text_color(self.inactive_color)
-    end
-end
-
-function Menu:draw_text(i)
-    local padding = 5
-    local font_size = 25
-
-    self:new_event()
-    self:pos(self.pos_x + padding, self.pos_y + self.rect_height * (i - 1) + padding)
-    self:font_size(font_size)
-    self:apply_text_color(i)
-    self:append(self.items[i])
-end
-
-function Menu:draw_item(i)
-    self:new_event()
-    self:pos(self.pos_x, self.pos_y)
-    self:apply_rect_color(i)
-    self:draw_start()
-    self:rect_cw(0, 0 + (i - 1) * self.rect_height, self.rect_width, i * self.rect_height)
-    self:draw_stop()
-    self:draw_text(i)
-end
-
-function Menu:draw()
-    self.text = ''
-    for i, _ in ipairs(self.items) do
-        self:draw_item(i)
-    end
-
-    mp.set_osd_ass(self.canvas_width, self.canvas_height, self.text)
-end
-
-function Menu:erase()
-    mp.set_osd_ass(self.canvas_width, self.canvas_height, '')
-end
-
-function Menu:up()
-    self.selected = self.selected - 1
-    if self.selected == 0 then
-        self.selected = #self.items
-    end
-    self:draw()
-end
-
-function Menu:down()
-    self.selected = self.selected + 1
-    if self.selected > #self.items then
-        self.selected = 1
-    end
-    self:draw()
-end
-
-------------------------------------------------------------
 -- Menu actions & bindings
 
-menu = Menu:new {
+ref_selector = menu:new {
     items = { 'Sync to audio', 'Sync to an internal subtitle', 'Cancel' },
     last_choice = 'audio',
     pos_x = 50,
@@ -365,7 +260,7 @@ menu = Menu:new {
     inactive_color = 'fff5da',
 }
 
-function menu:get_keybindings()
+function ref_selector:get_keybindings()
     return {
         { key = 'h', fn = function() self:close() end },
         { key = 'j', fn = function() self:down() end },
@@ -379,13 +274,13 @@ function menu:get_keybindings()
     }
 end
 
-function menu:new(o)
+function ref_selector:new(o)
     self.__index = self
     o = o or {}
     return setmetatable(o, self)
 end
 
-function menu:get_ref()
+function ref_selector:get_ref()
     if self.selected == 1 then
         return 'audio'
     elseif self.selected == 2 then
@@ -395,7 +290,7 @@ function menu:get_ref()
     end
 end
 
-function menu:act()
+function ref_selector:act()
     self:close()
 
     if self.selected == 3 then
@@ -405,7 +300,7 @@ function menu:act()
     engine_selector:init()
 end
 
-function menu:call_subsync()
+function ref_selector:call_subsync()
     if self.selected == 1 then
         sync_subtitles()
     elseif self.selected == 2 then
@@ -413,7 +308,7 @@ function menu:call_subsync()
     end
 end
 
-function menu:open()
+function ref_selector:open()
     self.selected = 1
     for _, val in pairs(self:get_keybindings()) do
         mp.add_forced_key_binding(val.key, val.key, val.fn)
@@ -421,7 +316,7 @@ function menu:open()
     self:draw()
 end
 
-function menu:close()
+function ref_selector:close()
     for _, val in pairs(self:get_keybindings()) do
         mp.remove_key_binding(val.key)
     end
@@ -432,7 +327,7 @@ end
 ------------------------------------------------------------
 -- Engine selector
 
-engine_selector = menu:new {
+engine_selector = ref_selector:new {
     items = { 'ffsubsync', 'alass', 'Cancel' },
     last_choice = 'ffsubsync',
 }
@@ -466,19 +361,19 @@ end
 ------------------------------------------------------------
 -- Track selector
 
-track_selector = menu:new { }
+track_selector = ref_selector:new { }
 
 function track_selector:init()
     self.selected = 0
 
-    if menu:get_ref() == 'audio' then
-        return menu:call_subsync()
+    if ref_selector:get_ref() == 'audio' then
+        return ref_selector:call_subsync()
     end
 
-    self.tracks = get_loaded_tracks(menu:get_ref())
+    self.tracks = get_loaded_tracks(ref_selector:get_ref())
 
     if #self.tracks < 2 then
-        return menu:call_subsync()
+        return ref_selector:call_subsync()
     end
 
     self.items = {}
@@ -512,7 +407,7 @@ function track_selector:act()
         return
     end
 
-    menu:call_subsync()
+    ref_selector:call_subsync()
 end
 
 ------------------------------------------------------------
@@ -529,4 +424,4 @@ end
 -- Entry point
 
 init()
-mp.add_key_binding("n", "autosubsync-menu", function() menu:open() end)
+mp.add_key_binding("n", "autosubsync-menu", function() ref_selector:open() end)
