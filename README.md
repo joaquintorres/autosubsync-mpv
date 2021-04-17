@@ -2,7 +2,7 @@
 
 Automatic subtitle synchronization script for [mpv](https://wiki.archlinux.org/index.php/Mpv).
 
-Watch the [video demonstration](https://www.youtube.com/watch?v=obrd4QF6CHU).
+A demo can be viewed on <a target="_blank" href="https://www.youtube.com/watch?v=w1vwnUiF6Bc"><img src="https://user-images.githubusercontent.com/69171671/115097010-4bd13c80-9f17-11eb-83e9-2583658f73bc.png" width="80px"></a>
 
 Supported backends:
 * [ffsubsync](https://github.com/smacke/ffsubsync)
