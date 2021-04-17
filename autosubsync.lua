@@ -3,9 +3,12 @@
 --  add the following to your input.conf to change the default keybinding:
 --  keyname script_binding autosubsync-menu
 
+local mp = require('mp')
 local utils = require('mp.utils')
 local mpopt = require('mp.options')
+local menu
 local engine_selector
+local track_selector
 
 -- Config
 -- Options can be changed here or in a separate config file.
@@ -87,6 +90,17 @@ local function subprocess(args)
     }
 end
 
+local function get_loaded_tracks(track_type)
+    local result = {}
+    local track_list = mp.get_property_native('track-list')
+    for _, track in pairs(track_list) do
+        if track.type == track_type then
+            table.insert(result, track)
+        end
+    end
+    return result
+end
+
 local function get_active_track(track_type)
     local track_list = mp.get_property_native('track-list')
     for num, track in ipairs(track_list) do
@@ -124,29 +138,29 @@ local function engine_is_set()
     end
 end
 
-local function get_engine_name()
-    return engine_is_set() and config.subsync_tool or engine_selector.last_choice
-end
-
-local function sync_sub_fn(timed_sub_path)
-    local reference_file_path = timed_sub_path or mp.get_property("path")
+local function sync_subtitles(ref_sub_path)
+    local reference_file_path = ref_sub_path or mp.get_property("path")
     local subtitle_path = get_active_subtitle_track_path()
-    local engine_name = get_engine_name()
+    local engine_name = engine_selector:get_engine_name()
     local engine_path = config[engine_name .. '_path']
 
     if not file_exists(engine_path) then
-        notify(string.format(
-                "Can't find %s executable.\nPlease specify the correct path in the config.",
-                engine_name), "error", 5)
-        return
+        return notify(
+                string.format("Can't find %s executable.\nPlease specify the correct path in the config.", engine_name),
+                "error",
+                5
+        )
     end
 
     if not file_exists(subtitle_path) then
-        notify(table.concat {
-            "Subtitle synchronization failed:\nCouldn't find ",
-            subtitle_path or "external subtitle file."
-        }, "error", 3)
-        return
+        return notify(
+                table.concat {
+                    "Subtitle synchronization failed:\nCouldn't find ",
+                    subtitle_path or "external subtitle file."
+                },
+                "error",
+                3
+        )
     end
 
     local retimed_subtitle_path = mkfp_retimed(subtitle_path)
@@ -156,7 +170,7 @@ local function sync_sub_fn(timed_sub_path)
     local ret
     if engine_name == "ffsubsync" then
         local args = { config.ffsubsync_path, reference_file_path, "-i", subtitle_path, "-o", retimed_subtitle_path }
-        if not timed_sub_path then
+        if not ref_sub_path then
             table.insert(args, '--reference-stream')
             table.insert(args, '0:' .. get_active_track('audio'))
         end
@@ -166,8 +180,7 @@ local function sync_sub_fn(timed_sub_path)
     end
 
     if ret == nil then
-        notify("Parsing failed or no args passed.", "fatal", 3)
-        return
+        return notify("Parsing failed or no args passed.", "fatal", 3)
     end
 
     if ret.status == 0 then
@@ -199,33 +212,37 @@ end)()
 
 local function sync_to_internal()
     if not file_exists(config.ffmpeg_path) then
-        notify("Can't find ffmpeg executable.\nPlease specify the correct path in the config.", "error", 5)
-        return
+        return notify("Can't find ffmpeg executable.\nPlease specify the correct path in the config.", "error", 5)
     end
 
-    local extracted_sub_filename = utils.join_path(os_temp(), 'autosubsync_extracted.srt')
-
-    notify("Extracting internal subtitles...", nil, 3)
-    local ret = subprocess {
-        config.ffmpeg_path,
-        "-hide_banner",
-        "-nostdin",
-        "-y",
-        "-loglevel", "quiet",
-        "-an",
-        "-vn",
-        "-i", mp.get_property("path"),
-        "-f", "srt",
-        extracted_sub_filename
-    }
-
-    if ret == nil or ret.status ~= 0 then
-        notify("Couldn't extract internal subtitle.\nMake sure the video has internal subtitles.", "error", 7)
-        return
+    local selected_track = track_selector:get_selected_track()
+    local ref_sub_filepath
+    if selected_track and selected_track.external then
+        ref_sub_filepath = selected_track['external-filename']
+    else
+        ref_sub_filepath = utils.join_path(os_temp(), 'autosubsync_extracted.srt')
+        notify("Extracting internal subtitles...", nil, 3)
+        print(selected_track.num)
+        local ret = subprocess {
+            config.ffmpeg_path,
+            "-hide_banner",
+            "-nostdin",
+            "-y",
+            "-loglevel", "quiet",
+            "-an",
+            "-vn",
+            "-i", mp.get_property("path"),
+            "-map", "0:" .. (selected_track and selected_track['ff-index'] or 's'),
+            "-f", "srt",
+            ref_sub_filepath
+        }
+        if ret == nil or ret.status ~= 0 then
+            return notify("Couldn't extract internal subtitle.\nMake sure the video has internal subtitles.", "error", 7)
+        end
     end
 
-    sync_sub_fn(extracted_sub_filename)
-    os.remove(extracted_sub_filename)
+    sync_subtitles(ref_sub_filepath)
+    os.remove(ref_sub_filepath)
 end
 
 ------------------------------------------------------------
@@ -243,7 +260,7 @@ function Menu:new(o)
     o.canvas_height = o.canvas_height or 720
     o.pos_x = o.pos_x or 0
     o.pos_y = o.pos_y or 0
-    o.rect_width = o.rect_width or 250
+    o.rect_width = o.rect_width or 320
     o.rect_height = o.rect_height or 40
     o.active_color = o.active_color or 'ffffff'
     o.inactive_color = o.inactive_color or 'aaaaaa'
@@ -337,8 +354,9 @@ end
 ------------------------------------------------------------
 -- Menu actions & bindings
 
-local menu = Menu:new {
+menu = Menu:new {
     items = { 'Sync to audio', 'Sync to an internal subtitle', 'Cancel' },
+    last_choice = 'audio',
     pos_x = 50,
     pos_y = 50,
     text_color = 'fff5da',
@@ -357,6 +375,7 @@ function menu:get_keybindings()
         { key = 'up', fn = function() self:up() end },
         { key = 'Enter', fn = function() self:act() end },
         { key = 'ESC', fn = function() self:close() end },
+        { key = 'n', fn = function() self:close() end },
     }
 end
 
@@ -366,8 +385,14 @@ function menu:new(o)
     return setmetatable(o, self)
 end
 
-function menu:should_open_engine_selector()
-    return not engine_is_set()
+function menu:get_ref()
+    if self.selected == 1 then
+        return 'audio'
+    elseif self.selected == 2 then
+        return 'sub'
+    else
+        return nil
+    end
 end
 
 function menu:act()
@@ -377,17 +402,12 @@ function menu:act()
         return
     end
 
-    if self:should_open_engine_selector() then
-        engine_selector:open()
-        return
-    end
-
-    self:call_subsync()
+    engine_selector:init()
 end
 
 function menu:call_subsync()
     if self.selected == 1 then
-        sync_sub_fn()
+        sync_subtitles()
     elseif self.selected == 2 then
         sync_to_internal()
     end
@@ -413,9 +433,21 @@ end
 -- Engine selector
 
 engine_selector = menu:new {
-    items = { 'ffsubsync', 'alass', 'Cancel'},
-    last_choice = 'ffsubsync'
+    items = { 'ffsubsync', 'alass', 'Cancel' },
+    last_choice = 'ffsubsync',
 }
+
+function engine_selector:init()
+    if not engine_is_set() then
+        engine_selector:open()
+    else
+        track_selector:init()
+    end
+end
+
+function engine_selector:get_engine_name()
+    return engine_is_set() and config.subsync_tool or self.last_choice
+end
 
 function engine_selector:act()
     self:close()
@@ -428,6 +460,58 @@ function engine_selector:act()
         return
     end
 
+    track_selector:init()
+end
+
+------------------------------------------------------------
+-- Track selector
+
+track_selector = menu:new { }
+
+function track_selector:init()
+    self.selected = 0
+
+    if menu:get_ref() == 'audio' then
+        return menu:call_subsync()
+    end
+
+    self.tracks = get_loaded_tracks(menu:get_ref())
+
+    if #self.tracks < 2 then
+        return menu:call_subsync()
+    end
+
+    self.items = {}
+    for _, track in ipairs(self.tracks) do
+        table.insert(
+                self.items,
+                string.format(
+                        "%s #%s - %s%s",
+                        (track.external and 'External' or 'Internal'),
+                        track['ff-index'],
+                        (track.lang or track.title:gsub('^.*%.', '')),
+                        (track.selected and ' (active)' or '')
+                )
+        )
+    end
+    table.insert(self.items, "Cancel")
+    self:open()
+end
+
+function track_selector:get_selected_track()
+    if self.selected < 1 then
+        return nil
+    end
+    return self.tracks[self.selected]
+end
+
+function track_selector:act()
+    self:close()
+
+    if self.selected == #self.items then
+        return
+    end
+
     menu:call_subsync()
 end
 
@@ -435,7 +519,7 @@ end
 -- Initialize the addon
 
 local function init()
-    for _, executable in pairs {'ffmpeg', 'ffsubsync', 'alass'} do
+    for _, executable in pairs { 'ffmpeg', 'ffsubsync', 'alass' } do
         local config_key = executable .. '_path'
         config[config_key] = is_empty(config[config_key]) and find_executable(executable) or config[config_key]
     end
