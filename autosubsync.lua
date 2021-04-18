@@ -211,19 +211,17 @@ local function sync_subtitles(ref_sub_path)
     end
 end
 
-local function sync_to_internal()
-    if not file_exists(config.ffmpeg_path) then
-        return notify("Can't find ffmpeg executable.\nPlease specify the correct path in the config.", "error", 5)
-    end
-
+local function sync_to_subtitle()
     local selected_track = track_selector:get_selected_track()
-    local ref_sub_filepath
+
     if selected_track and selected_track.external then
-        ref_sub_filepath = selected_track['external-filename']
+        sync_subtitles(selected_track['external-filename'])
     else
-        ref_sub_filepath = utils.join_path(os_temp(), 'autosubsync_extracted.srt')
+        if not file_exists(config.ffmpeg_path) then
+            return notify("Can't find ffmpeg executable.\nPlease specify the correct path in the config.", "error", 5)
+        end
+        local temp_sub_fp = utils.join_path(os_temp(), 'autosubsync_extracted.srt')
         notify("Extracting internal subtitles...", nil, 3)
-        print(selected_track.num)
         local ret = subprocess {
             config.ffmpeg_path,
             "-hide_banner",
@@ -235,15 +233,14 @@ local function sync_to_internal()
             "-i", mp.get_property("path"),
             "-map", "0:" .. (selected_track and selected_track['ff-index'] or 's'),
             "-f", "srt",
-            ref_sub_filepath
+            temp_sub_fp
         }
         if ret == nil or ret.status ~= 0 then
             return notify("Couldn't extract internal subtitle.\nMake sure the video has internal subtitles.", "error", 7)
         end
+        sync_subtitles(temp_sub_fp)
+        os.remove(temp_sub_fp)
     end
-
-    sync_subtitles(ref_sub_filepath)
-    os.remove(ref_sub_filepath)
 end
 
 ------------------------------------------------------------
@@ -304,7 +301,7 @@ function ref_selector:call_subsync()
     if self.selected == 1 then
         sync_subtitles()
     elseif self.selected == 2 then
-        sync_to_internal()
+        sync_to_subtitle()
     end
 end
 
