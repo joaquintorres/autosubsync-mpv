@@ -367,25 +367,39 @@ function track_selector:init()
         return ref_selector:call_subsync()
     end
 
-    self.tracks = get_loaded_tracks(ref_selector:get_ref())
-
-    if #self.tracks < 2 then
-        return ref_selector:call_subsync()
-    end
-
+    self.all_sub_tracks = get_loaded_tracks(ref_selector:get_ref())
+    self.tracks = {}
     self.items = {}
-    for _, track in ipairs(self.tracks) do
-        table.insert(
-                self.items,
-                string.format(
-                        "%s #%s - %s%s",
-                        (track.external and 'External' or 'Internal'),
-                        track['ff-index'],
-                        (track.lang or track.title:gsub('^.*%.', '')),
-                        (track.selected and ' (active)' or '')
-                )
-        )
+
+    for _, track in ipairs(self.all_sub_tracks) do
+        local supported_format = true
+        if track.external then
+            local ext = get_extension(track['external-filename'])
+            if ext ~= '.srt' and ext ~= '.ass' then
+                supported_format = false
+            end
+        end
+
+        if not track.selected and supported_format then
+            table.insert(self.tracks, track)
+            table.insert(
+                    self.items,
+                    string.format(
+                            "%s #%s - %s%s",
+                            (track.external and 'External' or 'Internal'),
+                            track['ff-index'],
+                            (track.lang or track.title:gsub('^.*%.', '')),
+                            (track.selected and ' (active)' or '')
+                    )
+            )
+        end
     end
+
+    if #self.items == 0 then
+        notify("No supported subtitle tracks found.", "warn", 5)
+        return
+    end
+
     table.insert(self.items, "Cancel")
     self:open()
 end
