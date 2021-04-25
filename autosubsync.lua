@@ -247,7 +247,7 @@ end
 -- Menu actions & bindings
 
 ref_selector = menu:new {
-    items = { 'Sync to audio', 'Sync to an internal subtitle', 'Cancel' },
+    items = { 'Sync to audio', 'Sync to another subtitle', 'Cancel' },
     last_choice = 'audio',
     pos_x = 50,
     pos_y = 50,
