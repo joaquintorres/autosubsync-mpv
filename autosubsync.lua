@@ -23,7 +23,8 @@ local config = {
 
     -- Choose what tool to use. Allowed options: ffsubsync, alass, ask.
     -- If set to ask, the add-on will ask to choose the tool every time.
-    subsync_tool = "ask",
+    audio_subsync_tool = "ask",
+    altsub_subsync_tool = "ask",
 
     -- After retiming, tell mpv to forget the original subtitle track.
     unload_old_sub = true,
@@ -144,7 +145,8 @@ local function mkfp_retimed(sub_path)
 end
 
 local function engine_is_set()
-    if is_empty(config.subsync_tool) or config.subsync_tool == "ask" then
+    local subsync_tool = ref_selector:get_subsync_tool()
+    if is_empty(subsync_tool) or subsync_tool == "ask" then
         return false
     else
         return true
@@ -287,6 +289,14 @@ function ref_selector:get_ref()
     end
 end
 
+function ref_selector:get_subsync_tool()
+    if self.selected == 1 then
+        return config.audio_subsync_tool
+    elseif self.selected == 2 then
+        return config.altsub_subsync_tool
+    end
+end
+
 function ref_selector:act()
     self:close()
 
@@ -338,7 +348,7 @@ function engine_selector:init()
 end
 
 function engine_selector:get_engine_name()
-    return engine_is_set() and config.subsync_tool or self.last_choice
+    return engine_is_set() and ref_selector:get_subsync_tool() or self.last_choice
 end
 
 function engine_selector:act()
