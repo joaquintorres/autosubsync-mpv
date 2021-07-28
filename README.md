@@ -68,10 +68,17 @@ alass_path=C:/Program Files/ffmpeg/bin/alass.exe
 alass_path=/usr/bin/alass
 
 # Preferred retiming tool. Allowed options: 'ffsubsync', 'alass', 'ask'.
-# If set to 'ask', the add-on will ask to choose the tool every time.
-subsync_tool=ask
-subsync_tool=ffsubsync
-subsync_tool=alass
+# If set to 'ask', the add-on will ask to choose the tool every time:
+
+# 1. Preferred tool for syncing to audio.
+audio_subsync_tool=ask
+audio_subsync_tool=ffsubsync
+audio_subsync_tool=alass
+
+# 2. Preferred tool for syncing to another subtitle.
+altsub_subsync_tool=ask
+altsub_subsync_tool=ffsubsync
+altsub_subsync_tool=alass
 
 # Unload old subs (yes,no)
 # After retiming, tell mpv to forget the original subtitle track.
