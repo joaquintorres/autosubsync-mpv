@@ -397,7 +397,7 @@ function track_selector:init()
                     string.format(
                             "%s #%s - %s%s",
                             (track.external and 'External' or 'Internal'),
-                            track['ff-index'],
+                            track['id'],
                             (track.lang or track.title:gsub('^.*%.', '')),
                             (track.selected and ' (active)' or '')
                     )
