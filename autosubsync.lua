@@ -398,7 +398,7 @@ function track_selector:init()
                             "%s #%s - %s%s",
                             (track.external and 'External' or 'Internal'),
                             track['id'],
-                            (track.lang or track.title:gsub('^.*%.', '')),
+                            (track.lang or (track.title and track.title:gsub('^.*%.', '') or 'unknown')),
                             (track.selected and ' (active)' or '')
                     )
             )
