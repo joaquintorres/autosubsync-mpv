@@ -263,17 +263,10 @@ local function sync_to_manual_offset()
     if tonumber(sub_delay) == 0 then
         return notify("There were no manual timings set, nothing to do!", "error", 7)
     end
-    local file_path = nil
-    if track.external then
-        file_path = track['external-filename']
-    else
-        file_path = extract_to_file(track)
-        if file_path == nil then
-            return
-        end
-    end
-    local ext = get_extension(file_path)
+    local file_path = track.external and track['external-filename'] or extract_to_file(track)
+    if file_path == nil then return end
 
+    local ext = get_extension(file_path)
     local codec_parser_map = { ass = sub.ASS, subrip = sub.SRT }
     local parser = codec_parser_map[track['codec']]
     if parser == nil then
@@ -283,7 +276,7 @@ local function sync_to_manual_offset()
     s:shift_timing(sub_delay)
     if track.external == false then
         os.remove(file_path)
-        s.filename = mp.get_property("filename/no-ext") .. "_manual_timing." .. ext
+        s.filename = mp.get_property("filename/no-ext") .. "_manual_timing" .. ext
     else
         s.filename = remove_extension(s.filename) .. '_manual_timing' .. ext
     end
