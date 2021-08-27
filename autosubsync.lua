@@ -7,6 +7,7 @@ local mp = require('mp')
 local utils = require('mp.utils')
 local mpopt = require('mp.options')
 local menu = require('menu')
+local sub = require('subtitle')
 local ref_selector
 local engine_selector
 local track_selector
@@ -246,11 +247,39 @@ local function sync_to_subtitle()
     end
 end
 
+local function sync_to_manual_offset()
+	local _, track = get_active_track('sub')
+	for k,v in pairs(track) do print(k,v) end
+	local sub_delay = tonumber(mp.get_property("sub-delay"))
+	if tonumber(sub_delay) == 0 then
+		return notify("There was no manual offset set, nothing to do!", "error", 7)
+	end
+	local filename = track.external
+		and track['external-filename']
+		or utils.join_path(os_temp(), 'autosubsync_extracted.' .. track['codec'])
+	local ext = get_extension(filename)
+	local codec_parser_map = { ass = sub.ASS, subrip = sub.SRT }
+	local parser = codec_parser_map[track['codec']]
+	local s = parser:populate(filename)
+	s:shift_timing(sub_delay)
+	s.filename = remove_extension(s.filename) .. '_manual_offset' .. ext
+	s:save()
+	mp.commandv("sub_add", s.filename)
+	if track.external == nil then
+		os.remove(filename)
+	end
+	if config.unload_old_sub then
+		mp.commandv("sub_remove", track.id)
+	end
+    mp.set_property("sub-delay", 0)
+	return notify(string.format("Manual offset applied, loading '%s'", s.filename), "info", 7)
+end
+
 ------------------------------------------------------------
 -- Menu actions & bindings
 
 ref_selector = menu:new {
-    items = { 'Sync to audio', 'Sync to another subtitle', 'Cancel' },
+    items = { 'Sync to audio', 'Sync to another subtitle', 'Save current timings', 'Cancel' },
     last_choice = 'audio',
     pos_x = 50,
     pos_y = 50,
@@ -301,7 +330,10 @@ end
 function ref_selector:act()
     self:close()
 
-    if self.selected == 3 then
+	if self.selected == 3 then
+		do return sync_to_manual_offset() end
+	end
+    if self.selected == 4 then
         return
     end
 
@@ -313,6 +345,8 @@ function ref_selector:call_subsync()
         sync_subtitles()
     elseif self.selected == 2 then
         sync_to_subtitle()
+    elseif self.selected == 3 then
+        sync_to_manual_offset()
     end
 end
 
