@@ -1,7 +1,7 @@
 local P = {}
 
-TimeStamp = {}
-TimeStamp_mt = { __index = TimeStamp }
+local TimeStamp = {}
+local TimeStamp_mt = { __index = TimeStamp }
 function TimeStamp:new(hours, minutes, seconds)
 	local new = {}
 	new.hours = hours
@@ -37,8 +37,8 @@ function TimeStamp.to_seconds(seconds, milliseconds)
 	return tonumber(string.format("%s.%s", seconds, milliseconds))
 end
 
-AbstractSubtitle = {}
-AbstractSubtitle_mt = { __index = AbstractSubtitle }
+local AbstractSubtitle = {}
+local AbstractSubtitle_mt = { __index = AbstractSubtitle }
 
 function AbstractSubtitle:create()
 	local new = {}
@@ -52,16 +52,13 @@ function AbstractSubtitle:save()
 	f:close()
 end
 
---[[
-strip Byte Order Mark from file, if it's present
-]]
+-- strip Byte Order Mark from file, if it's present
 function AbstractSubtitle:sanitize(line)
 	local bom_table = { 0xEF, 0xBB, 0xBF } -- TODO maybe add other ones (like UTF-16)
 	local function has_bom()
 		for i=1,#bom_table do
 			if i > #line then return false end
 			local ch, byte = line:sub(i,i), line:byte(i,i)
-			-- print(string.format("Character [%s]: byte: 0x%X", ch, byte))
 			if byte ~= bom_table[i] then return false end
 		end
 		return true
@@ -92,7 +89,7 @@ function AbstractSubtitle.valid_entry(entry)
 	return entry ~= nil
 end
 
-function inheritsFrom ( baseClass )
+local function inheritsFrom ( baseClass )
 	local new_class = {}
 	local class_mt = { __index = new_class }
 
@@ -113,7 +110,7 @@ function inheritsFrom ( baseClass )
 	return new_class
 end
 
-SRT = inheritsFrom(AbstractSubtitle)
+local SRT = inheritsFrom(AbstractSubtitle)
 function SRT.entry()
 	return { index = nil, start_time = nil, end_time = nil, text = {} }
 end
@@ -171,7 +168,7 @@ function SRT:toString()
 	return table.concat(stringbuilder, '\n')
 end
 
-ASS = inheritsFrom(AbstractSubtitle)
+local ASS = inheritsFrom(AbstractSubtitle)
 ASS.header_mapper = { ["Start"] = "start_time", ["End"] = "end_time" }
 
 function ASS.valid_entry(entry)

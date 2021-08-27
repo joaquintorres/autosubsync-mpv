@@ -266,7 +266,9 @@ local function sync_to_manual_offset()
         return notify("There were no manual timings set, nothing to do!", "error", 7)
     end
     local file_path = track.external and track['external-filename'] or extract_to_file(track)
-    if file_path == nil then return end
+    if file_path == nil then
+        return
+    end
 
     local ext = get_extension(file_path)
     local codec_parser_map = { ass = sub.ASS, subrip = sub.SRT }
