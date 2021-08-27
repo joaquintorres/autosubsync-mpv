@@ -164,7 +164,7 @@ function SRT:toString()
 		local timestamp_string = string.format("%s --> %s", entry.start_time:toString(","), entry.end_time:toString(","))
 		append(timestamp_string)
 		if type(entry.text) == 'table' then
-			append(table.concat(entry.text))
+			append(table.concat(entry.text, "\n"))
 		else append(entry.text) end
 		append('')
 	end
