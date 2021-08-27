@@ -157,6 +157,9 @@ end
 local function extract_to_file(subtitle_track)
     local codec_ext_map = { subrip = "srt", ass = "ass" }
     local ext = codec_ext_map[subtitle_track['codec']]
+    if ext == nil then
+        return notify(string.format("Error: unsupported codec: %s", subtitle_track['codec']), "error", 3)
+    end
     local temp_sub_fp = utils.join_path(os_temp(), 'autosubsync_extracted.' .. ext)
     notify("Extracting internal subtitles...", nil, 3)
     local ret = subprocess {
@@ -173,8 +176,7 @@ local function extract_to_file(subtitle_track)
         temp_sub_fp
     }
     if ret == nil or ret.status ~= 0 then
-        notify("Couldn't extract internal subtitle.\nMake sure the video has internal subtitles.", "error", 7)
-        return nil
+        return notify("Couldn't extract internal subtitle.\nMake sure the video has internal subtitles.", "error", 7)
     end
     return temp_sub_fp
 end
