@@ -154,6 +154,31 @@ local function engine_is_set()
     end
 end
 
+local function extract_to_file(subtitle_track)
+    local codec_ext_map = { subrip = "srt", ass = "ass" }
+    local ext = codec_ext_map[subtitle_track['codec']]
+    local temp_sub_fp = utils.join_path(os_temp(), 'autosubsync_extracted.' .. ext)
+    notify("Extracting internal subtitles...", nil, 3)
+    local ret = subprocess {
+        config.ffmpeg_path,
+        "-hide_banner",
+        "-nostdin",
+        "-y",
+        "-loglevel", "quiet",
+        "-an",
+        "-vn",
+        "-i", mp.get_property("path"),
+        "-map", "0:" .. (subtitle_track and subtitle_track['ff-index'] or 's'),
+        "-f", ext,
+        temp_sub_fp
+    }
+    if ret == nil or ret.status ~= 0 then
+        notify("Couldn't extract internal subtitle.\nMake sure the video has internal subtitles.", "error", 7)
+        return nil
+    end
+    return temp_sub_fp
+end
+
 local function sync_subtitles(ref_sub_path)
     local reference_file_path = ref_sub_path or mp.get_property("path")
     local subtitle_path = get_active_subtitle_track_path()
@@ -224,55 +249,51 @@ local function sync_to_subtitle()
         if not file_exists(config.ffmpeg_path) then
             return notify("Can't find ffmpeg executable.\nPlease specify the correct path in the config.", "error", 5)
         end
-        local temp_sub_fp = utils.join_path(os_temp(), 'autosubsync_extracted.srt')
-        notify("Extracting internal subtitles...", nil, 3)
-        local ret = subprocess {
-            config.ffmpeg_path,
-            "-hide_banner",
-            "-nostdin",
-            "-y",
-            "-loglevel", "quiet",
-            "-an",
-            "-vn",
-            "-i", mp.get_property("path"),
-            "-map", "0:" .. (selected_track and selected_track['ff-index'] or 's'),
-            "-f", "srt",
-            temp_sub_fp
-        }
-        if ret == nil or ret.status ~= 0 then
-            return notify("Couldn't extract internal subtitle.\nMake sure the video has internal subtitles.", "error", 7)
+        local temp_sub_fp = extract_to_file(selected_track)
+        if temp_sub_fp then
+            sync_subtitles(temp_sub_fp)
+            os.remove(temp_sub_fp)
         end
-        sync_subtitles(temp_sub_fp)
-        os.remove(temp_sub_fp)
     end
 end
 
 local function sync_to_manual_offset()
-	local _, track = get_active_track('sub')
-	for k,v in pairs(track) do print(k,v) end
-	local sub_delay = tonumber(mp.get_property("sub-delay"))
-	if tonumber(sub_delay) == 0 then
-		return notify("There was no manual offset set, nothing to do!", "error", 7)
-	end
-	local filename = track.external
-		and track['external-filename']
-		or utils.join_path(os_temp(), 'autosubsync_extracted.' .. track['codec'])
-	local ext = get_extension(filename)
-	local codec_parser_map = { ass = sub.ASS, subrip = sub.SRT }
-	local parser = codec_parser_map[track['codec']]
-	local s = parser:populate(filename)
-	s:shift_timing(sub_delay)
-	s.filename = remove_extension(s.filename) .. '_manual_offset' .. ext
-	s:save()
-	mp.commandv("sub_add", s.filename)
-	if track.external == nil then
-		os.remove(filename)
-	end
-	if config.unload_old_sub then
-		mp.commandv("sub_remove", track.id)
-	end
+    local _, track = get_active_track('sub')
+    local sub_delay = tonumber(mp.get_property("sub-delay"))
+    if tonumber(sub_delay) == 0 then
+        return notify("There were no manual timings set, nothing to do!", "error", 7)
+    end
+    local file_path = nil
+    if track.external then
+        file_path = track['external-filename']
+    else
+        file_path = extract_to_file(track)
+        if file_path == nil then
+            return
+        end
+    end
+    local ext = get_extension(file_path)
+
+    local codec_parser_map = { ass = sub.ASS, subrip = sub.SRT }
+    local parser = codec_parser_map[track['codec']]
+    if parser == nil then
+        return notify(string.format("Error: unsupported codec: %s", track['codec']), "error", 3)
+    end
+    local s = parser:populate(file_path)
+    s:shift_timing(sub_delay)
+    if track.external == false then
+        os.remove(file_path)
+        s.filename = mp.get_property("filename/no-ext") .. "_manual_timing." .. ext
+    else
+        s.filename = remove_extension(s.filename) .. '_manual_timing' .. ext
+    end
+    s:save()
+    mp.commandv("sub_add", s.filename)
+    if config.unload_old_sub then
+        mp.commandv("sub_remove", track.id)
+    end
     mp.set_property("sub-delay", 0)
-	return notify(string.format("Manual offset applied, loading '%s'", s.filename), "info", 7)
+    return notify(string.format("Manual timings saved, loading '%s'", s.filename), "info", 7)
 end
 
 ------------------------------------------------------------
@@ -330,9 +351,9 @@ end
 function ref_selector:act()
     self:close()
 
-	if self.selected == 3 then
-		do return sync_to_manual_offset() end
-	end
+    if self.selected == 3 then
+        do return sync_to_manual_offset() end
+    end
     if self.selected == 4 then
         return
     end
