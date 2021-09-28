@@ -129,7 +129,7 @@ function SRT:populate(filename)
 	local entry = self.entry()
 	local f_idx, idx = 1, 1
 	for _, line in pairs(self:parse_file(filename)) do
-		if idx == 1 then
+		if idx == 1 and #line > 0 then
 			assert(line:match("^%d+$"), string.format("SRT FORMAT ERROR (line %d): expected a number but got '%s'", f_idx, line))
 			entry.index = line
 		elseif idx == 2 then
@@ -138,7 +138,9 @@ function SRT:populate(filename)
 			entry.start_time, entry.end_time = t_start, t_end
 		else
 			if #line == 0 then -- end of text
-				table.insert(new.entries, entry)
+				if entry.index ~= nil then
+					table.insert(new.entries, entry)
+				end
 				entry = SRT.entry()
 				idx = 0
 			else
