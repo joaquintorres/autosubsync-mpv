@@ -129,7 +129,7 @@ end
 local function get_active_subtitle_track_path()
     local _, track = get_active_track('sub')
     if track and track.external == true then
-        return track['external-filename']
+        return track['external-filename']:gsub("^file://", "")
     end
 end
 
