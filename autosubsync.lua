@@ -123,14 +123,7 @@ local function get_active_track(track_type)
             return num, track
         end
     end
-    return nil
-end
-
-local function get_active_subtitle_track_path()
-    local _, track = get_active_track('sub')
-    if track and track.external == true then
-        return track['external-filename']:gsub("^file://", "")
-    end
+    return notify(string.format("Error: no track of type '%s' selected", track_type), "error", 3)
 end
 
 local function remove_extension(filename)
@@ -183,7 +176,11 @@ end
 
 local function sync_subtitles(ref_sub_path)
     local reference_file_path = ref_sub_path or mp.get_property("path")
-    local subtitle_path = get_active_subtitle_track_path()
+    local _, sub_track = get_active_track('sub')
+    if sub_track == nil then
+        return
+    end
+    local subtitle_path = sub_track.external and sub_track['external-filename']:gsub("^file://", "") or extract_to_file(sub_track)
     local engine_name = engine_selector:get_engine_name()
     local engine_path = config[engine_name .. '_path']
 
