@@ -315,6 +315,10 @@ function ref_selector:get_keybindings()
         { key = 'Enter', fn = function() self:act() end },
         { key = 'ESC', fn = function() self:close() end },
         { key = 'n', fn = function() self:close() end },
+        { key = 'WHEEL_DOWN', fn = function() self:down() end },
+        { key = 'WHEEL_UP', fn = function() self:up() end },
+        { key = 'MBTN_LEFT', fn = function() self:act() end },
+        { key = 'MBTN_RIGHT', fn = function() self:close() end },   
     }
 end
 
