@@ -25,7 +25,7 @@ Supported backends:
     $ pip install ffsubsync
     ```
     ```
-    $ trizen -S alass-git # for Arch Linux users
+    $ trizen -S alass-git # for Arch-based distros
     ```
 
 3. Download the add-on and save it to your mpv scripts folder.
