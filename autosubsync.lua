@@ -197,7 +197,7 @@ local function extract_to_file(subtitle_track)
         temp_sub_fp
     }
     if ret == nil or ret.status ~= 0 then
-        return notify("Couldn't extract internal subtitle.\nMake sure the video has internal subtitles.", "error", 7)
+        return notify("Couldn't extract internal subtitle.\nPlease ensure that you have set the path of ffmpeg in the config file first.\nAnd make sure the video has internal subtitles.", "error", 7)
     end
     return temp_sub_fp
 end
@@ -211,14 +211,6 @@ local function sync_subtitles(ref_sub_path)
     local subtitle_path = sub_track.external and sub_track['external-filename'] or extract_to_file(sub_track)
     local engine_name = engine_selector:get_engine_name()
     local engine_path = config[engine_name .. '_path']
-
-    if not file_exists(engine_path) then
-        return notify(
-                string.format("Can't find %s executable.\nPlease specify the correct path in the config.", engine_name),
-                "error",
-                5
-        )
-    end
 
     if not file_exists(subtitle_path) then
         return notify(
@@ -263,7 +255,7 @@ local function sync_subtitles(ref_sub_path)
             notify("Error: couldn't add synchronized subtitle.", "error", 3)
         end
     else
-        notify("Subtitle synchronization failed.", "error", 3)
+        notify(string.format("Subtitle synchronization failed.\nPlease ensure that you have set the path to %s in the config file.", engine_name), "error", 3)
     end
 end
 
@@ -273,9 +265,6 @@ local function sync_to_subtitle()
     if selected_track and selected_track.external then
         sync_subtitles(selected_track['external-filename'])
     else
-        if not file_exists(config.ffmpeg_path) then
-            return notify("Can't find ffmpeg executable.\nPlease specify the correct path in the config.", "error", 5)
-        end
         local temp_sub_fp = extract_to_file(selected_track)
         if temp_sub_fp then
             sync_subtitles(temp_sub_fp)
