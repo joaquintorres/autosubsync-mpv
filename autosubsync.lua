@@ -452,6 +452,17 @@ end
 
 track_selector = ref_selector:new { }
 
+local function is_supported_format(track)
+    local supported_format = true
+    if track.external then
+        local ext = get_extension(track['external-filename'])
+        if ext ~= '.srt' and ext ~= '.ass' then
+            supported_format = false
+        end
+    end
+    return supported_format
+end
+
 function track_selector:init()
     self.selected = 0
 
@@ -465,15 +476,7 @@ function track_selector:init()
     self.items = {}
 
     for _, track in ipairs(self.all_sub_tracks) do
-        local supported_format = true
-        if track.external then
-            local ext = get_extension(track['external-filename'])
-            if ext ~= '.srt' and ext ~= '.ass' then
-                supported_format = false
-            end
-        end
-
-        if (not track.selected or track.id == self.secondary_sid) and supported_format then
+        if (not track.selected or track.id == self.secondary_sid) and is_supported_format(track) then
             table.insert(self.tracks, track)
             table.insert(
                     self.items,
