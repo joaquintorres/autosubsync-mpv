@@ -460,6 +460,7 @@ function track_selector:init()
     end
 
     self.all_sub_tracks = get_loaded_tracks(ref_selector:get_ref())
+    self.secondary_sid = mp.get_property_native('secondary-sid')
     self.tracks = {}
     self.items = {}
 
@@ -472,7 +473,7 @@ function track_selector:init()
             end
         end
 
-        if not track.selected and supported_format then
+        if (not track.selected or track.id == self.secondary_sid) and supported_format then
             table.insert(self.tracks, track)
             table.insert(
                     self.items,
