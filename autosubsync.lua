@@ -8,6 +8,7 @@ local utils = require('mp.utils')
 local mpopt = require('mp.options')
 local menu = require('menu')
 local sub = require('subtitle')
+local h = require('helpers')
 local ref_selector
 local engine_selector
 local track_selector
@@ -31,10 +32,6 @@ local config = {
     unload_old_sub = true,
 }
 mpopt.read_options(config, 'autosubsync')
-
-local function is_empty(var)
-    return var == nil or var == '' or (type(var) == 'table' and next(var) == nil)
-end
 
 -- Snippet borrowed from stackoverflow to get the operating system
 -- originally found at: https://stackoverflow.com/a/30960054
@@ -61,33 +58,6 @@ local os_temp = (function()
         end
     end
 end)()
-
--- Courtesy of https://stackoverflow.com/questions/4990990/check-if-a-file-exists-with-lua
-local function file_exists(filepath)
-    if not filepath then
-        return false
-    end
-    local f = io.open(filepath, "r")
-    if f ~= nil then
-        io.close(f)
-        return true
-    else
-        return false
-    end
-end
-
-local function find_executable(name)
-    local os_path = os.getenv("PATH") or ""
-    local fallback_path = utils.join_path("/usr/bin", name)
-    local exec_path
-    for path in os_path:gmatch("[^:]+") do
-        exec_path = utils.join_path(path, name)
-        if file_exists(exec_path) then
-            return exec_path
-        end
-    end
-    return fallback_path
-end
 
 local function notify(message, level, duration)
     level = level or 'info'
@@ -168,7 +138,7 @@ end
 
 local function engine_is_set()
     local subsync_tool = ref_selector:get_subsync_tool()
-    if is_empty(subsync_tool) or subsync_tool == "ask" then
+    if h.is_empty(subsync_tool) or subsync_tool == "ask" then
         return false
     else
         return true
@@ -212,7 +182,7 @@ local function sync_subtitles(ref_sub_path)
     local engine_name = engine_selector:get_engine_name()
     local engine_path = config[engine_name .. '_path']
 
-    if not file_exists(engine_path) then
+    if not h.file_exists(engine_path) then
         return notify(
                 string.format("Can't find %s executable.\nPlease specify the correct path in the config.", engine_name),
                 "error",
@@ -220,7 +190,7 @@ local function sync_subtitles(ref_sub_path)
         )
     end
 
-    if not file_exists(subtitle_path) then
+    if not h.file_exists(subtitle_path) then
         return notify(
                 table.concat {
                     "Subtitle synchronization failed:\nCouldn't find ",
@@ -273,7 +243,7 @@ local function sync_to_subtitle()
     if selected_track and selected_track.external then
         sync_subtitles(selected_track['external-filename'])
     else
-        if not file_exists(config.ffmpeg_path) then
+        if not h.file_exists(config.ffmpeg_path) then
             return notify("Can't find ffmpeg executable.\nPlease specify the correct path in the config.", "error", 5)
         end
         local temp_sub_fp = extract_to_file(selected_track)
@@ -523,7 +493,7 @@ end
 local function init()
     for _, executable in pairs { 'ffmpeg', 'ffsubsync', 'alass' } do
         local config_key = executable .. '_path'
-        config[config_key] = is_empty(config[config_key]) and find_executable(executable) or config[config_key]
+        config[config_key] = h.is_empty(config[config_key]) and h.find_executable(executable) or config[config_key]
     end
 end
 
