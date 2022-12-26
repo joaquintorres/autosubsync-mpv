@@ -182,7 +182,7 @@ local function sync_subtitles(ref_sub_path)
     local engine_name = engine_selector:get_engine_name()
     local engine_path = config[engine_name .. '_path']
 
-    if not h.file_exists(engine_path) then
+    if h.is_path(config.ffmpeg_path) and not h.file_exists(engine_path) then
         return notify(
                 string.format("Can't find %s executable.\nPlease specify the correct path in the config.", engine_name),
                 "error",
@@ -243,7 +243,7 @@ local function sync_to_subtitle()
     if selected_track and selected_track.external then
         sync_subtitles(selected_track['external-filename'])
     else
-        if not h.file_exists(config.ffmpeg_path) then
+        if h.is_path(config.ffmpeg_path) and not h.file_exists(config.ffmpeg_path) then
             return notify("Can't find ffmpeg executable.\nPlease specify the correct path in the config.", "error", 5)
         end
         local temp_sub_fp = extract_to_file(selected_track)

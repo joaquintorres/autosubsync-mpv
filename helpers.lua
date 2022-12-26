@@ -34,4 +34,8 @@ function self.find_executable(name)
     return name
 end
 
+function self.is_path(str)
+    return not not string.match(str, '[/\\]')
+end
+
 return self
