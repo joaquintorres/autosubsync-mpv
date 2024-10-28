@@ -30,6 +30,9 @@ local config = {
 
     -- After retiming, tell mpv to forget the original subtitle track.
     unload_old_sub = true,
+
+    -- Overwrite the original subtitle file
+    overwrite_old_sub = false,
 }
 mpopt.read_options(config, 'autosubsync')
 
@@ -129,7 +132,9 @@ local function startswith(str, prefix)
 end
 
 local function mkfp_retimed(sub_path)
-    if not startswith(sub_path, os_temp()) then
+    if config.overwrite_old_sub then
+        return sub_path
+    elseif not startswith(sub_path, os_temp()) then
         return table.concat { remove_extension(sub_path), '_retimed', get_extension(sub_path) }
     else
         return table.concat { remove_extension(mp.get_property("path")), '_retimed', get_extension(sub_path) }
