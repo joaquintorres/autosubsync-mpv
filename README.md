@@ -89,6 +89,11 @@ unload_old_sub=no
 # Replace the old subtitle file with the retimed file.
 overwrite_old_sub=yes
 overwrite_old_sub=no
+
+# Directory to write the new subtitle file to.
+# If set to empty, the directory of the original subtitle will be used.
+new_sub_directory=
+new_sub_directory=~~/retimed-subtitles
 ```
 
 ## Notes
