@@ -131,13 +131,13 @@ local function startswith(str, prefix)
     return string.sub(str, 1, string.len(prefix)) == prefix
 end
 
-local function mkfp_retimed(sub_path)
+local function mkfp_retimed(sub_path, suffix)
     if config.overwrite_old_sub then
         return sub_path
     elseif not startswith(sub_path, os_temp()) then
-        return table.concat { remove_extension(sub_path), '_retimed', get_extension(sub_path) }
+        return table.concat { remove_extension(sub_path), suffix, get_extension(sub_path) }
     else
-        return table.concat { remove_extension(mp.get_property("path")), '_retimed', get_extension(sub_path) }
+        return table.concat { remove_extension(mp.get_property("path")), suffix, get_extension(sub_path) }
     end
 end
 
@@ -206,7 +206,7 @@ local function sync_subtitles(ref_sub_path)
         )
     end
 
-    local retimed_subtitle_path = mkfp_retimed(subtitle_path)
+    local retimed_subtitle_path = mkfp_retimed(subtitle_path, '_retimed')
 
     notify(string.format("Starting %s...", engine_name), nil, 2)
 
@@ -280,10 +280,8 @@ local function sync_to_manual_offset()
     s:shift_timing(sub_delay)
     if track.external == false then
         os.remove(file_path)
-        s.filename = mp.get_property("filename/no-ext") .. "_manual_timing" .. ext
-    else
-        s.filename = remove_extension(s.filename) .. '_manual_timing' .. ext
     end
+    s.filename = mkfp_retimed(file_path, '_manual_timing')
     s:save()
     mp.commandv("sub_add", s.filename)
     if config.unload_old_sub then
